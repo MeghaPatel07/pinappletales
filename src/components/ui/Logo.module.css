@@ -1,0 +1,16 @@
+/*
+ * The logo is a fixed-aspect lockup (399 × 172). Placements set a height and
+ * the width follows, so the artwork is never distorted.
+ */
+.logo {
+  display: block;
+  width: auto;
+  height: 2.9rem;
+  max-width: 100%;
+}
+
+@media (min-width: 48rem) {
+  .logo {
+    height: 3.5rem;
+  }
+}

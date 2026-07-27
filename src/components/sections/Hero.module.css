@@ -1,0 +1,159 @@
+.hero {
+  position: relative;
+  padding-top: clamp(2.5rem, 6vw, 5rem);
+  background:
+    radial-gradient(
+      ellipse 60% 50% at 12% 0%,
+      rgba(242, 190, 26, 0.13) 0%,
+      rgba(242, 190, 26, 0) 70%
+    ),
+    var(--canvas);
+  overflow: hidden;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(2.5rem, 6vw, 4rem);
+  align-items: center;
+  padding-bottom: clamp(3rem, 6vw, 5rem);
+}
+
+.copy {
+  max-width: 36rem;
+}
+
+.eyebrow {
+  margin-bottom: var(--space-4);
+  color: var(--brand-700);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-widest);
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.title {
+  font-size: var(--text-4xl);
+  line-height: 1.05;
+}
+
+.emphasis {
+  position: relative;
+  z-index: 0; /* own stacking context so the underline sits behind the glyphs only */
+  font-style: italic;
+  color: var(--ink-900);
+  white-space: nowrap;
+}
+
+/* Hand-drawn style underline in the brand yellow. */
+.emphasis::after {
+  content: '';
+  position: absolute;
+  left: 0.06em;
+  right: 0.06em;
+  bottom: 0.06em;
+  height: 0.34em;
+  background-color: var(--brand-300);
+  border-radius: var(--radius-pill);
+  opacity: 0.65;
+  z-index: -1;
+}
+
+.lead {
+  margin-top: var(--space-5);
+  max-width: 34rem;
+  color: var(--ink-500);
+  font-size: var(--text-lg);
+  line-height: var(--leading-normal);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3) var(--space-5);
+  margin-top: var(--space-7);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--line);
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--ink-500);
+  font-size: var(--text-sm);
+}
+
+.metaIcon {
+  color: var(--brand-600);
+  flex: none;
+}
+
+.visual {
+  order: -1;
+}
+
+/* Ticker band ------------------------------------------------------------ */
+.ticker {
+  border-block: 1px solid var(--line);
+  background-color: var(--surface-alt);
+}
+
+.tickerInner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-5);
+  padding-block: var(--space-4);
+  font-size: var(--text-sm);
+}
+
+.tickerLabel {
+  color: var(--ink-900);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  font-size: var(--text-xs);
+}
+
+.tickerText {
+  color: var(--ink-500);
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: var(--text-base);
+}
+
+.tickerLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: auto;
+  color: var(--brand-700);
+  font-weight: 600;
+  text-decoration: none;
+  transition: gap var(--duration-base) var(--ease-out);
+}
+
+.tickerLink:hover {
+  gap: 0.7rem;
+}
+
+/* ------------------------------------------------------------------------ */
+@media (min-width: 60rem) {
+  .grid {
+    grid-template-columns: 1.05fr 0.95fr;
+    gap: clamp(3rem, 6vw, 5.5rem);
+  }
+
+  .visual {
+    order: 0;
+  }
+}

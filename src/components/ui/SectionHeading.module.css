@@ -1,0 +1,67 @@
+.heading {
+  max-width: 46rem;
+  margin-bottom: var(--space-7);
+}
+
+.center {
+  margin-inline: auto;
+  text-align: center;
+}
+
+/* Small-caps eyebrow with a short brand rule — the recurring section marker. */
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-bottom: var(--space-3);
+  color: var(--brand-700);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-widest);
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.eyebrow::before {
+  content: '';
+  width: 1.75rem;
+  height: 2px;
+  flex: none;
+  background-color: var(--brand-500);
+}
+
+.center .eyebrow {
+  justify-content: center;
+}
+
+.center .eyebrow::after {
+  content: '';
+  width: 1.75rem;
+  height: 2px;
+  flex: none;
+  background-color: var(--brand-500);
+}
+
+.title {
+  margin: 0;
+}
+
+.lead {
+  margin-top: var(--space-4);
+  max-width: 42rem;
+  color: var(--ink-500);
+  font-size: var(--text-lg);
+  line-height: var(--leading-normal);
+}
+
+.center .lead {
+  margin-inline: auto;
+}
+
+.dark .eyebrow {
+  color: var(--brand-400);
+}
+
+.dark .lead {
+  color: rgba(255, 253, 248, 0.72);
+}

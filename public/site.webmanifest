@@ -1,0 +1,31 @@
+{
+  "name": "Pineappletales by Kenaa Jadeja",
+  "short_name": "Pineappletales",
+  "description": "Neuro-Art Therapy, Bibliotherapy and creative writing workshops for children, parents and schools in Vadodara — offline and online.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#fffdf8",
+  "theme_color": "#f2be1a",
+  "lang": "en-IN",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

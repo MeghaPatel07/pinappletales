@@ -1,0 +1,98 @@
+.button {
+  --btn-bg: transparent;
+  --btn-fg: var(--ink-900);
+  --btn-border: transparent;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  padding: 0.8rem 1.5rem;
+  background-color: var(--btn-bg);
+  color: var(--btn-fg);
+  border: 1px solid var(--btn-border);
+  border-radius: var(--radius-pill);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--duration-base) var(--ease-out),
+    border-color var(--duration-base) var(--ease-out),
+    color var(--duration-base) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-base) var(--ease-out);
+}
+
+.button:hover {
+  transform: translateY(-1px);
+}
+
+.button:active {
+  transform: translateY(0);
+}
+
+.lg {
+  padding: 1rem 1.9rem;
+  font-size: var(--text-base);
+}
+
+.block {
+  width: 100%;
+}
+
+@media (min-width: 30rem) {
+  .block {
+    width: auto;
+  }
+}
+
+/* Variants -------------------------------------------------------------- */
+.primary {
+  --btn-bg: var(--brand-500);
+  --btn-fg: var(--ink-900);
+  --btn-border: var(--brand-500);
+  box-shadow: var(--shadow-sm);
+}
+
+.primary:hover {
+  --btn-bg: var(--brand-400);
+  --btn-border: var(--brand-400);
+  box-shadow: var(--shadow-md);
+}
+
+.secondary {
+  --btn-fg: var(--ink-900);
+  --btn-border: var(--line-strong);
+}
+
+.secondary:hover {
+  --btn-bg: var(--brand-50);
+  --btn-border: var(--brand-400);
+}
+
+.ghost {
+  --btn-fg: var(--ink-700);
+  padding-inline: 0.25rem;
+  border-radius: var(--radius-sm);
+}
+
+.ghost:hover {
+  --btn-fg: var(--brand-700);
+}
+
+.onDark {
+  --btn-fg: var(--brand-50);
+  --btn-border: rgba(255, 253, 248, 0.32);
+}
+
+.onDark:hover {
+  --btn-bg: rgba(255, 253, 248, 0.08);
+  --btn-border: var(--brand-400);
+  --btn-fg: var(--brand-200);
+}
