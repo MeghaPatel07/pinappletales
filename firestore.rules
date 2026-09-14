@@ -1,0 +1,92 @@
+rules_version = '2';
+
+// =============================================================================
+// Pineappletales — Firestore security rules
+//
+// Deploy with:  firebase deploy --only firestore:rules
+//
+// Shape of the model:
+//   admins/{uid}            an allow-list. Presence of the doc grants admin.
+//   blogs, events,          public content. Anyone may read an ACTIVE document;
+//   podcasts, eventForms    only admins may read drafts or write anything.
+//   eventRegistrations      write-only for the public (form submissions);
+//                           readable only by admins.
+// =============================================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // Content the public site reads. `isActive` is the publish switch: an
+    // inactive document is invisible to everyone but an admin, which is what
+    // makes drafts safe to keep in the same collection.
+    function publiclyReadable() {
+      return resource.data.isActive == true;
+    }
+
+    match /blogs/{blogId} {
+      allow read: if publiclyReadable() || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /events/{eventId} {
+      allow read: if publiclyReadable() || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /testimonials/{testimonialId} {
+      allow read: if publiclyReadable() || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /podcasts/{podcastId} {
+      allow read: if publiclyReadable() || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // The field definitions for an event's registration form. Public read so
+    // the event page can render the form; admin-only write.
+    match /eventForms/{eventId} {
+      allow read: if publiclyReadable() || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // Submissions. Anyone may create one, nobody but an admin may read them
+    // back — a visitor must never be able to enumerate other people's details.
+    match /eventRegistrations/{registrationId} {
+      allow read, update, delete: if isAdmin();
+      allow create: if isValidRegistration();
+    }
+
+    function isValidRegistration() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['eventId', 'values', 'createdAt'])
+        && data.eventId is string
+        && data.eventId.size() > 0
+        && data.eventId.size() <= 128
+        && data.values is map
+        && data.values.size() <= 40
+        // Pins the timestamp to the server clock so a client cannot backdate.
+        && data.createdAt == request.time
+        // Keeps a submission from being used as free storage.
+        && request.resource.size() < 20000;
+    }
+
+    // The admin allow-list itself. Readable by signed-in admins (the shell
+    // shows who you are); never writable from the client — add admins with
+    // scripts/seed-admin.mjs or from the Firebase console.
+    match /admins/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    // Anything not matched above is denied.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

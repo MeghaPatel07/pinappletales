@@ -72,8 +72,8 @@ export function Header() {
         </nav>
 
         <div className={styles.actions}>
-          <Button to="/contact" className={styles.desktopCta}>
-            Book a session
+          <Button to="/contact" variant="dark" className={styles.desktopCta}>
+            Book a Session
           </Button>
 
           <button
@@ -118,7 +118,7 @@ export function Header() {
         </nav>
         <div className={styles.mobileFooter}>
           <Button to="/contact" size="lg" block>
-            Book a session
+            Book a Session
           </Button>
           <p className={styles.mobileNote}>{site.promise}</p>
         </div>

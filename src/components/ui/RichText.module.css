@@ -1,0 +1,140 @@
+/* Typography for author-written article bodies. */
+
+.prose {
+  font-size: var(--text-md);
+  line-height: var(--leading-relaxed);
+  color: var(--ink-500);
+}
+
+.prose > * + * {
+  margin-top: var(--space-4);
+}
+
+.prose h2,
+.prose h3,
+.prose h4 {
+  margin-top: var(--space-7);
+  color: var(--ink-900);
+}
+
+.prose h2 {
+  font-size: var(--text-2xl);
+}
+
+.prose h3 {
+  font-size: var(--text-xl);
+}
+
+.prose h4 {
+  font-size: var(--text-lg);
+}
+
+.prose h2 + *,
+.prose h3 + *,
+.prose h4 + * {
+  margin-top: var(--space-3);
+}
+
+.prose a {
+  color: var(--brand-700);
+  text-decoration: underline;
+  text-decoration-color: var(--brand-300);
+  text-underline-offset: 0.18em;
+}
+
+.prose a:hover {
+  text-decoration-color: var(--brand-600);
+}
+
+.prose ul,
+.prose ol {
+  padding-left: 1.35rem;
+}
+
+.prose ul {
+  list-style: disc;
+}
+
+.prose ol {
+  list-style: decimal;
+}
+
+.prose li + li {
+  margin-top: var(--space-2);
+}
+
+.prose li::marker {
+  color: var(--brand-600);
+}
+
+.prose blockquote {
+  padding: var(--space-2) 0 var(--space-2) var(--space-5);
+  border-left: 3px solid var(--brand-400);
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-style: italic;
+  color: var(--ink-700);
+}
+
+.prose img {
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-md);
+}
+
+.prose figure {
+  margin-block: var(--space-6);
+}
+
+.prose figcaption {
+  margin-top: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--ink-400);
+  text-align: center;
+}
+
+.prose pre {
+  padding: var(--space-4);
+  overflow-x: auto;
+  font-size: var(--text-sm);
+  background-color: var(--surface-sunk);
+  border-radius: var(--radius-md);
+}
+
+.prose code {
+  font-size: 0.9em;
+}
+
+.prose hr {
+  margin-block: var(--space-7);
+}
+
+/* Wide tables scroll inside their own box rather than the page. */
+.prose table {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.prose th,
+.prose td {
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+  border: 1px solid var(--line);
+}
+
+.prose th {
+  background-color: var(--surface-alt);
+  color: var(--ink-800);
+  font-weight: 600;
+}
+
+.prose iframe {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  height: auto;
+  border: 0;
+  border-radius: var(--radius-md);
+}

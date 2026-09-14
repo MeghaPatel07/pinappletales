@@ -21,7 +21,12 @@ const tree = (
 
 // Prerendered documents ship with markup inside #root, so hydrate those and
 // only mount from scratch when the shell is empty (e.g. `vite dev`).
-if (container.hasChildNodes()) {
+//
+// Tested with firstElementChild rather than hasChildNodes: the dev server
+// serves the untouched shell, whose `<!--app-html-->` placeholder is itself a
+// child node. That made dev take the hydrate path against markup that was not
+// there, and React logged a mismatch on every page load before falling back.
+if (container.firstElementChild) {
   hydrateRoot(container, tree)
 } else {
   createRoot(container).render(tree)

@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import styles from './Button.module.css'
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'onDark'
+type Variant = 'primary' | 'secondary' | 'ghost' | 'onDark' | 'dark'
 type Size = 'md' | 'lg'
 
 type CommonProps = {

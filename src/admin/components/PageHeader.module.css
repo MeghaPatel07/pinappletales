@@ -1,0 +1,101 @@
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.text {
+  min-width: 0;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-bottom: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--ink-400);
+  text-decoration: none;
+}
+
+.back:hover {
+  color: var(--brand-700);
+}
+
+.title {
+  font-size: var(--text-2xl);
+  color: var(--ink-900);
+}
+
+.description {
+  margin-top: var(--space-2);
+  max-width: 46ch;
+  font-size: var(--text-sm);
+  color: var(--ink-400);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+/* Empty state ------------------------------------------------------------ */
+
+.empty {
+  padding: var(--space-4);
+  text-align: center;
+}
+
+.emptyTitle {
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--ink-700);
+  letter-spacing: 0;
+}
+
+.emptyMessage {
+  margin-top: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--ink-400);
+}
+
+.emptyAction {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--space-4);
+}
+
+/* Badges ----------------------------------------------------------------- */
+
+.badgeActive,
+.badgeDraft,
+.badgeFeatured {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  border-radius: var(--radius-pill);
+}
+
+.badgeActive {
+  color: #2f5719;
+  background-color: var(--accent-leaf-soft);
+}
+
+.badgeDraft {
+  color: var(--ink-500);
+  background-color: var(--surface-sunk);
+}
+
+.badgeFeatured {
+  color: var(--brand-800);
+  background-color: var(--brand-100);
+}

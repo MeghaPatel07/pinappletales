@@ -1,0 +1,223 @@
+.status {
+  padding: var(--space-6) 0;
+  font-size: var(--text-md);
+  color: var(--ink-400);
+  text-align: center;
+}
+
+/* Index ------------------------------------------------------------------- */
+
+.grid {
+  display: grid;
+  gap: var(--space-6);
+  margin-top: var(--space-5);
+}
+
+@media (min-width: 40rem) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 64rem) {
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.pastSection {
+  margin-top: var(--space-9);
+  padding-top: var(--space-7);
+  border-top: 1px solid var(--line);
+}
+
+.card {
+  height: 100%;
+}
+
+.cardLink {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  transition:
+    transform var(--duration-base) var(--ease-out),
+    box-shadow var(--duration-base) var(--ease-out);
+}
+
+.cardLink:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+.cardImage,
+.cardImagePlaceholder {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  background-color: var(--surface-sunk);
+}
+
+.cardImagePlaceholder {
+  display: grid;
+  place-items: center;
+  color: var(--brand-600);
+  background-image: linear-gradient(135deg, var(--brand-100), var(--surface-sunk));
+}
+
+.cardBody {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-5);
+}
+
+.cardMeta,
+.detailMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--ink-400);
+}
+
+.tagUpcoming,
+.tagPast {
+  padding: 0.1rem 0.55rem;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  border-radius: var(--radius-pill);
+}
+
+.tagUpcoming {
+  color: #2f5719;
+  background-color: var(--accent-leaf-soft);
+}
+
+.tagPast {
+  color: var(--ink-500);
+  background-color: var(--surface-sunk);
+}
+
+.cardTitle {
+  font-size: var(--text-xl);
+}
+
+.cardLink:hover .cardTitle {
+  color: var(--brand-700);
+}
+
+.cardSummary {
+  flex: 1;
+  font-size: var(--text-base);
+  color: var(--ink-400);
+}
+
+.readMore {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--brand-700);
+}
+
+/* Detail ------------------------------------------------------------------ */
+
+.detail {
+  padding-top: clamp(2rem, 5vw, 4.5rem);
+}
+
+.detailHeader {
+  padding-bottom: var(--space-6);
+}
+
+.crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--ink-300);
+}
+
+.crumbLink {
+  color: var(--ink-400);
+  text-decoration: none;
+}
+
+.crumbLink:hover {
+  color: var(--brand-700);
+}
+
+.detailTitle {
+  max-width: 16ch;
+  margin-top: var(--space-3);
+  font-size: var(--text-4xl);
+}
+
+.detailLead {
+  margin-top: var(--space-4);
+  font-size: var(--text-lg);
+  color: var(--ink-500);
+}
+
+.banner {
+  width: min(100%, 70rem);
+  max-height: min(52vw, 40rem);
+  margin-inline: auto;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background-color: var(--surface-sunk);
+}
+
+.bannerImage {
+  width: 100%;
+  height: min(52vw, 40rem);
+  object-fit: cover;
+  object-position: center;
+}
+
+/* Gallery ----------------------------------------------------------------- */
+
+.galleryHeading {
+  margin-bottom: var(--space-5);
+  font-size: var(--text-2xl);
+}
+
+.gallery {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+}
+
+.galleryItem {
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background-color: var(--surface-sunk);
+}
+
+.galleryImage {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  transition: transform var(--duration-slow) var(--ease-out);
+}
+
+@media (max-width: 40rem) {
+  .banner,
+  .bannerImage { max-height: 15rem; height: 15rem; border-radius: var(--radius-md); }
+}
+
+.galleryItem:hover .galleryImage {
+  transform: scale(1.03);
+}

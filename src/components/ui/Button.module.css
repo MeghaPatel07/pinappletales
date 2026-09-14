@@ -86,6 +86,19 @@
   --btn-fg: var(--brand-700);
 }
 
+.dark {
+  --btn-bg: #1c1917;
+  --btn-fg: #ffffff;
+  --btn-border: #1c1917;
+  box-shadow: var(--shadow-sm);
+}
+
+.dark:hover {
+  --btn-bg: #292524;
+  --btn-border: #292524;
+  box-shadow: var(--shadow-md);
+}
+
 .onDark {
   --btn-fg: var(--brand-50);
   --btn-border: rgba(255, 253, 248, 0.32);

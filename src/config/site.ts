@@ -10,7 +10,7 @@
  *   VITE_SITE_URL=https://your-domain.com npm run build
  */
 export const SITE_URL: string = (
-  import.meta.env.VITE_SITE_URL ?? 'https://www.pineappletales.in'
+  import.meta.env.VITE_SITE_URL ?? 'https://www.pineappletales.com'
 ).replace(/\/$/, '')
 
 export const site = {
@@ -67,6 +67,9 @@ export const primaryNav: readonly NavItem[] = [
   { label: 'Home', path: '/' },
   { label: 'About', path: '/about' },
   { label: 'Services', path: '/services' },
+  { label: 'Events', path: '/events' },
+  { label: 'Blog', path: '/blog' },
+  { label: 'Podcast', path: '/podcast' },
   { label: 'Contact', path: '/contact' },
 ] as const
 
