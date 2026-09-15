@@ -7,10 +7,10 @@
 /**
  * Production origin, no trailing slash. Used for canonical URLs, Open Graph
  * URLs, the sitemap and JSON-LD. Override at build time with:
- *   VITE_SITE_URL=https://your-domain.com npm run build
+ *   NEXT_PUBLIC_SITE_URL=https://your-domain.com npm run build
  */
 export const SITE_URL: string = (
-  import.meta.env.VITE_SITE_URL ?? 'https://www.pineappletales.com'
+  process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.pineappletales.com'
 ).replace(/\/$/, '')
 
 export const site = {

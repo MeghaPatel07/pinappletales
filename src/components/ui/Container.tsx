@@ -1,5 +1,4 @@
 import type { ElementType, ReactNode } from 'react'
-import styles from './Container.module.css'
 
 type ContainerProps = {
   children: ReactNode
@@ -9,6 +8,12 @@ type ContainerProps = {
   className?: string
 }
 
+const WIDTH_CLASSES: Record<NonNullable<ContainerProps['width']>, string> = {
+  default: 'container-1200',
+  narrow: 'mx-auto w-full max-w-3xl px-6',
+  wide: 'mx-auto w-full max-w-[1400px] px-6',
+}
+
 export function Container({
   children,
   width = 'default',
@@ -16,8 +21,6 @@ export function Container({
   className,
 }: ContainerProps) {
   return (
-    <Tag className={[styles.container, styles[width], className].filter(Boolean).join(' ')}>
-      {children}
-    </Tag>
+    <Tag className={[WIDTH_CLASSES[width], className].filter(Boolean).join(' ')}>{children}</Tag>
   )
 }

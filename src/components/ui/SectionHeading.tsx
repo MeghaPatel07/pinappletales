@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react'
-import styles from './SectionHeading.module.css'
 
 type SectionHeadingProps = {
   eyebrow?: string
@@ -21,16 +20,30 @@ export function SectionHeading({
   tone = 'light',
 }: SectionHeadingProps) {
   return (
-    <header
-      className={[styles.heading, styles[align], tone === 'dark' ? styles.dark : '']
-        .filter(Boolean)
-        .join(' ')}
-    >
-      {eyebrow ? <p className={styles.eyebrow}>{eyebrow}</p> : null}
-      <Tag id={id} className={styles.title}>
+    <header className={align === 'center' ? 'text-center' : ''}>
+      {eyebrow ? (
+        <span className={`eyebrow block ${tone === 'dark' ? 'text-paper/70' : 'text-ink-soft'}`}>
+          {eyebrow}
+        </span>
+      ) : null}
+      <Tag
+        id={id}
+        className={`font-display mt-4 font-medium leading-[1.08] tracking-[-0.02em] ${
+          tone === 'dark' ? 'text-paper' : 'text-ink'
+        }`}
+        style={{ fontSize: 'clamp(2rem, 4vw, 3.2rem)' }}
+      >
         {title}
       </Tag>
-      {lead ? <p className={styles.lead}>{lead}</p> : null}
+      {lead ? (
+        <p
+          className={`mt-4 max-w-[52ch] text-[1.05rem] leading-normal ${
+            align === 'center' ? 'mx-auto' : ''
+          } ${tone === 'dark' ? 'text-paper/80' : 'text-ink-soft'}`}
+        >
+          {lead}
+        </p>
+      ) : null}
     </header>
   )
 }

@@ -1,29 +1,25 @@
+'use client'
+
 /**
  * Cloudinary image pickers — one for a single image, one for a gallery.
  *
- * Both go through lib/cloudinary's `uploadImage`, so they work identically on
- * the unsigned-preset path and the signed-endpoint path.
+ * Both go through lib/cloudinary's `uploadImage`, which always uses the
+ * signed path against /api/admin/uploads/sign.
  */
 
 import { useId, useRef, useState } from 'react'
 import { Icon } from '@/components/ui/Icon'
-import {
-  cloudinaryUrl,
-  isCloudinaryConfigured,
-  uploadImage,
-  UploadError,
-} from '@/lib/cloudinary'
+import { cloudinaryUrl, isCloudinaryConfigured, uploadImage, UploadError } from '@/lib/cloudinary'
 import type { CloudinaryImage } from '@/types/content'
-import styles from './ImageUploader.module.css'
 
 const CONFIG_HINT =
-  'Cloudinary is not configured. Add VITE_CLOUDINARY_CLOUD_NAME and VITE_CLOUDINARY_UPLOAD_PRESET to .env, then restart the dev server.'
+  'Cloudinary is not configured. Add NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET to .env, then restart the dev server.'
 
 function messageFor(error: unknown): string {
-  return error instanceof UploadError
-    ? error.message
-    : 'Upload failed. Please try again.'
+  return error instanceof UploadError ? error.message : 'Upload failed. Please try again.'
 }
+
+const LABEL_CLASSES = 'eyebrow text-ink-soft'
 
 // -----------------------------------------------------------------------------
 // Single image
@@ -38,14 +34,7 @@ type ImageFieldProps = {
   error?: string
 }
 
-export function ImageField({
-  label,
-  value,
-  onChange,
-  hint,
-  required,
-  error,
-}: ImageFieldProps) {
+export function ImageField({ label, value, onChange, hint, required, error }: ImageFieldProps) {
   const inputId = useId()
   const inputRef = useRef<HTMLInputElement>(null)
   const [progress, setProgress] = useState<number | null>(null)
@@ -66,7 +55,6 @@ export function ImageField({
       setUploadError(messageFor(caught))
     } finally {
       setProgress(null)
-      // Lets the same file be chosen again after a failure.
       if (inputRef.current) inputRef.current.value = ''
     }
   }
@@ -74,62 +62,48 @@ export function ImageField({
   const shownError = error || uploadError
 
   return (
-    <div className={styles.field}>
-      <div className={styles.labelRow}>
-        <span className={styles.label}>
-          {label}
-          {required ? (
-            <span className={styles.required} aria-hidden="true">
-              *
-            </span>
-          ) : (
-            <span className={styles.optional}>optional</span>
-          )}
-        </span>
-      </div>
+    <div className="grid gap-2">
+      <span className={LABEL_CLASSES}>
+        {label}
+        {required ? (
+          <span className="ml-1 text-coral" aria-hidden>
+            *
+          </span>
+        ) : (
+          <span className="ml-1 normal-case tracking-normal text-ink-soft/70">(optional)</span>
+        )}
+      </span>
 
       {value ? (
-        <div className={styles.preview}>
+        <div className="flex flex-col gap-3 rounded-card border border-line bg-paper-2 p-3 sm:flex-row">
           <img
             src={cloudinaryUrl(value, { width: 480, crop: 'limit' })}
             alt=""
-            className={styles.previewImage}
+            className="h-40 w-full rounded-xl object-cover sm:w-56"
             width={value.width || undefined}
             height={value.height || undefined}
           />
 
-          <div className={styles.previewBody}>
-            <p className={styles.previewMeta}>
-              {value.width && value.height
-                ? `${value.width} × ${value.height}`
-                : 'Uploaded'}
-            </p>
+          <div className="flex flex-1 flex-col gap-2">
+            <p className="text-[0.82rem] text-ink-soft">{value.width && value.height ? `${value.width} × ${value.height}` : 'Uploaded'}</p>
 
-            <label className={styles.altLabel} htmlFor={`${inputId}-alt`}>
-              Alt text
+            <label className="grid gap-1">
+              <span className="text-[0.78rem] text-ink-soft">Alt text</span>
               <input
                 id={`${inputId}-alt`}
                 type="text"
-                className={styles.altInput}
+                className="rounded-lg border border-line bg-paper px-3 py-1.5 text-[0.9rem]"
                 value={value.alt}
                 placeholder="Describe the image for screen readers"
                 onChange={(event) => onChange({ ...value, alt: event.target.value })}
               />
             </label>
 
-            <div className={styles.previewActions}>
-              <button
-                type="button"
-                className={styles.smallButton}
-                onClick={() => inputRef.current?.click()}
-              >
+            <div className="mt-auto flex gap-2">
+              <button type="button" className="rounded-full border border-line px-3 py-1.5 text-[0.82rem] hover:bg-card" onClick={() => inputRef.current?.click()}>
                 Replace
               </button>
-              <button
-                type="button"
-                className={styles.smallDanger}
-                onClick={() => onChange(null)}
-              >
+              <button type="button" className="rounded-full border border-coral px-3 py-1.5 text-[0.82rem] text-coral hover:bg-coral hover:text-paper" onClick={() => onChange(null)}>
                 Remove
               </button>
             </div>
@@ -138,21 +112,21 @@ export function ImageField({
       ) : (
         <button
           type="button"
-          className={styles.dropzone}
+          className="flex flex-col items-center justify-center gap-2 rounded-card border-2 border-dashed border-line bg-paper-2 px-4 py-10 text-center transition-colors hover:border-brand-deep disabled:cursor-not-allowed disabled:opacity-60"
           onClick={() => inputRef.current?.click()}
           disabled={!configured || progress !== null}
         >
           {progress === null ? (
             <>
-              <Icon name="upload" size={20} />
-              <span className={styles.dropzoneText}>Choose an image</span>
-              <span className={styles.dropzoneHint}>JPG, PNG, WebP or AVIF · up to 8 MB</span>
+              <Icon name="upload" size={20} className="text-ink-soft" />
+              <span className="text-[0.92rem] font-medium text-ink">Choose an image</span>
+              <span className="text-[0.78rem] text-ink-soft">JPG, PNG, WebP or AVIF · up to 8 MB</span>
             </>
           ) : (
             <>
-              <span className={styles.dropzoneText}>Uploading… {progress}%</span>
-              <span className={styles.progressTrack}>
-                <span className={styles.progressBar} style={{ width: `${progress}%` }} />
+              <span className="text-[0.92rem] text-ink">Uploading… {progress}%</span>
+              <span className="h-1.5 w-40 overflow-hidden rounded-full bg-line">
+                <span className="block h-full bg-brand-deep transition-all" style={{ width: `${progress}%` }} />
               </span>
             </>
           )}
@@ -167,10 +141,10 @@ export function ImageField({
         onChange={(event) => void handleFile(event.target.files?.[0])}
       />
 
-      {!configured && <p className={styles.hint}>{CONFIG_HINT}</p>}
-      {hint && configured && !shownError && <p className={styles.hint}>{hint}</p>}
+      {!configured && <p className="text-[0.82rem] text-ink-soft">{CONFIG_HINT}</p>}
+      {hint && configured && !shownError && <p className="text-[0.82rem] text-ink-soft">{hint}</p>}
       {shownError && (
-        <p className={styles.error} role="alert">
+        <p className="text-[0.82rem] text-coral" role="alert">
           {shownError}
         </p>
       )}
@@ -203,9 +177,6 @@ export function GalleryField({ label, value, onChange, hint }: GalleryFieldProps
     const chosen = Array.from(files)
     setUploading(chosen.length)
 
-    // Sequential rather than parallel: a gallery of large images uploaded all
-    // at once saturates an ordinary connection and the browser queues them
-    // anyway, but one failure would then be hard to attribute.
     const uploaded: CloudinaryImage[] = []
     for (const file of chosen) {
       try {
@@ -233,32 +204,29 @@ export function GalleryField({ label, value, onChange, hint }: GalleryFieldProps
   }
 
   return (
-    <div className={styles.field}>
-      <div className={styles.labelRow}>
-        <span className={styles.label}>
-          {label}
-          <span className={styles.optional}>
-            {value.length > 0 ? `${value.length} image${value.length === 1 ? '' : 's'}` : 'optional'}
-          </span>
+    <div className="grid gap-2">
+      <span className={LABEL_CLASSES}>
+        {label}
+        <span className="ml-1 normal-case tracking-normal text-ink-soft/70">
+          {value.length > 0 ? `${value.length} image${value.length === 1 ? '' : 's'}` : 'optional'}
         </span>
-      </div>
+      </span>
 
       {value.length > 0 && (
-        <ul className={styles.gallery}>
+        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {value.map((image, index) => (
-            <li key={image.publicId || image.url} className={styles.galleryItem}>
+            <li key={image.publicId || image.url} className="overflow-hidden rounded-card border border-line bg-paper-2">
               <img
                 src={cloudinaryUrl(image, { width: 240, height: 180, crop: 'fill', gravity: 'auto' })}
                 alt=""
-                className={styles.galleryImage}
+                className="h-28 w-full object-cover"
                 width={240}
                 height={180}
                 loading="lazy"
               />
-
               <input
                 type="text"
-                className={styles.galleryAlt}
+                className="w-full border-y border-line bg-paper px-2.5 py-1.5 text-[0.82rem]"
                 value={image.alt}
                 placeholder="Alt text"
                 onChange={(event) => {
@@ -267,36 +235,32 @@ export function GalleryField({ label, value, onChange, hint }: GalleryFieldProps
                   onChange(next)
                 }}
               />
-
-              <div className={styles.galleryActions}>
+              <div className="flex items-center justify-between gap-1 p-1.5">
                 <button
                   type="button"
-                  className={styles.iconButton}
+                  className="grid h-7 w-7 place-items-center rounded-lg text-ink-soft hover:bg-card disabled:opacity-30"
                   onClick={() => move(index, -1)}
                   disabled={index === 0}
                   title="Move earlier"
                 >
                   <Icon name="chevronLeft" size={14} />
-                  <span className="visually-hidden">Move earlier</span>
                 </button>
                 <button
                   type="button"
-                  className={styles.iconButton}
+                  className="grid h-7 w-7 place-items-center rounded-lg text-ink-soft hover:bg-card disabled:opacity-30"
                   onClick={() => move(index, 1)}
                   disabled={index === value.length - 1}
                   title="Move later"
                 >
                   <Icon name="chevronRight" size={14} />
-                  <span className="visually-hidden">Move later</span>
                 </button>
                 <button
                   type="button"
-                  className={styles.iconDanger}
+                  className="grid h-7 w-7 place-items-center rounded-lg text-coral hover:bg-coral hover:text-paper"
                   onClick={() => onChange(value.filter((_, i) => i !== index))}
                   title="Remove"
                 >
                   <Icon name="trash" size={14} />
-                  <span className="visually-hidden">Remove image</span>
                 </button>
               </div>
             </li>
@@ -306,14 +270,12 @@ export function GalleryField({ label, value, onChange, hint }: GalleryFieldProps
 
       <button
         type="button"
-        className={styles.addMore}
+        className="inline-flex w-fit items-center gap-1.5 rounded-full border border-line px-4 py-2 text-[0.85rem] font-medium text-ink hover:bg-card disabled:cursor-not-allowed disabled:opacity-60"
         onClick={() => inputRef.current?.click()}
         disabled={!configured || uploading > 0}
       >
         <Icon name="plus" size={16} />
-        {uploading > 0
-          ? `Uploading ${uploading} image${uploading === 1 ? '' : 's'}…`
-          : 'Add images'}
+        {uploading > 0 ? `Uploading ${uploading} image${uploading === 1 ? '' : 's'}…` : 'Add images'}
       </button>
 
       <input
@@ -325,10 +287,10 @@ export function GalleryField({ label, value, onChange, hint }: GalleryFieldProps
         onChange={(event) => void handleFiles(event.target.files)}
       />
 
-      {!configured && <p className={styles.hint}>{CONFIG_HINT}</p>}
-      {hint && configured && !uploadError && <p className={styles.hint}>{hint}</p>}
+      {!configured && <p className="text-[0.82rem] text-ink-soft">{CONFIG_HINT}</p>}
+      {hint && configured && !uploadError && <p className="text-[0.82rem] text-ink-soft">{hint}</p>}
       {uploadError && (
-        <p className={styles.error} role="alert">
+        <p className="text-[0.82rem] text-coral" role="alert">
           {uploadError}
         </p>
       )}

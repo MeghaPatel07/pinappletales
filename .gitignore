@@ -8,11 +8,13 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
-dist
-dist-ssr
+.next
+out
 *.local
+*.tsbuildinfo
+.scratch
 
-# Secrets — .env holds the Cloudinary API secret. Never commit it.
+# Secrets — .env holds MongoDB, JWT and Cloudinary secrets. Never commit it.
 .env
 .env.*
 !.env.example

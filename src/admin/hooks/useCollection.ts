@@ -7,9 +7,11 @@
  * the UI when a collection has outgrown that and needs server-side paging.
  */
 
+'use client'
+
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { RawDocument } from '@/lib/firestore/rest'
-import { ADMIN_PAGE_CAP, describeFirestoreError, listRecords } from '../lib/crud'
+import type { RawDocument } from '@/lib/apiTypes'
+import { ADMIN_PAGE_CAP, describeApiError, listRecords } from '../lib/crud'
 
 type State<T> = {
   items: T[]
@@ -65,7 +67,7 @@ export function useCollection<T extends { id: string }>(
       setState({
         items: [],
         loading: false,
-        error: describeFirestoreError(error),
+        error: describeApiError(error),
         truncated: false,
       })
     }

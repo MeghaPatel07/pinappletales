@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * Admin form controls.
  *
@@ -7,7 +9,9 @@
  */
 
 import { useId, type ReactNode } from 'react'
-import styles from './Form.module.css'
+
+const INPUT_BASE =
+  'w-full rounded-xl border bg-paper px-3.5 py-2.5 text-[0.95rem] text-ink transition-colors focus:outline-none focus:ring-2 focus:ring-brand-deep/40'
 
 type FieldShellProps = {
   id: string
@@ -20,26 +24,18 @@ type FieldShellProps = {
   aside?: ReactNode
 }
 
-function FieldShell({
-  id,
-  label,
-  required,
-  hint,
-  error,
-  children,
-  aside,
-}: FieldShellProps) {
+function FieldShell({ id, label, required, hint, error, children, aside }: FieldShellProps) {
   return (
-    <div className={styles.field}>
-      <div className={styles.labelRow}>
-        <label htmlFor={id} className={styles.label}>
+    <div className="grid gap-1.5">
+      <div className="flex items-center justify-between gap-3">
+        <label htmlFor={id} className="eyebrow text-ink-soft">
           {label}
           {required ? (
-            <span className={styles.required} aria-hidden="true">
+            <span className="ml-1 text-coral" aria-hidden>
               *
             </span>
           ) : (
-            <span className={styles.optional}>optional</span>
+            <span className="ml-1 normal-case tracking-normal text-ink-soft/70">(optional)</span>
           )}
         </label>
         {aside}
@@ -48,12 +44,12 @@ function FieldShell({
       {children}
 
       {hint && !error && (
-        <p id={`${id}-hint`} className={styles.hint}>
+        <p id={`${id}-hint`} className="text-[0.82rem] text-ink-soft">
           {hint}
         </p>
       )}
       {error && (
-        <p id={`${id}-error`} className={styles.error} role="alert">
+        <p id={`${id}-error`} className="text-[0.82rem] text-coral" role="alert">
           {error}
         </p>
       )}
@@ -92,18 +88,11 @@ export function TextField({
   const id = useId()
 
   return (
-    <FieldShell
-      id={id}
-      label={label}
-      required={required}
-      hint={hint}
-      error={error}
-      aside={aside}
-    >
+    <FieldShell id={id} label={label} required={required} hint={hint} error={error} aside={aside}>
       <input
         id={id}
         type={type}
-        className={[styles.input, error ? styles.invalid : ''].filter(Boolean).join(' ')}
+        className={`${INPUT_BASE} ${error ? 'border-coral' : 'border-line'}`}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
@@ -132,20 +121,11 @@ export function TextAreaField({
   const id = useId()
 
   return (
-    <FieldShell
-      id={id}
-      label={label}
-      required={required}
-      hint={hint}
-      error={error}
-      aside={aside}
-    >
+    <FieldShell id={id} label={label} required={required} hint={hint} error={error} aside={aside}>
       <textarea
         id={id}
         rows={rows}
-        className={[styles.input, styles.textarea, error ? styles.invalid : '']
-          .filter(Boolean)
-          .join(' ')}
+        className={`${INPUT_BASE} resize-y ${error ? 'border-coral' : 'border-line'}`}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
@@ -158,15 +138,7 @@ export function TextAreaField({
   )
 }
 
-export function DateField({
-  label,
-  value,
-  onChange,
-  required,
-  hint,
-  error,
-  disabled,
-}: Omit<BaseProps, 'placeholder'>) {
+export function DateField({ label, value, onChange, required, hint, error, disabled }: Omit<BaseProps, 'placeholder'>) {
   const id = useId()
 
   return (
@@ -174,7 +146,7 @@ export function DateField({
       <input
         id={id}
         type="date"
-        className={[styles.input, error ? styles.invalid : ''].filter(Boolean).join(' ')}
+        className={`${INPUT_BASE} ${error ? 'border-coral' : 'border-line'}`}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         disabled={disabled}
@@ -205,19 +177,12 @@ export function NumberField({
   const id = useId()
 
   return (
-    <FieldShell
-      id={id}
-      label={label}
-      required={required}
-      hint={hint}
-      error={error}
-      aside={aside}
-    >
+    <FieldShell id={id} label={label} required={required} hint={hint} error={error} aside={aside}>
       <input
         id={id}
         type="number"
         inputMode="numeric"
-        className={[styles.input, error ? styles.invalid : ''].filter(Boolean).join(' ')}
+        className={`${INPUT_BASE} ${error ? 'border-coral' : 'border-line'}`}
         value={Number.isFinite(value) ? value : ''}
         onChange={(event) => onChange(Number(event.target.value))}
         min={min}
@@ -242,19 +207,14 @@ export function SelectField({
   error,
   disabled,
   placeholder,
-}: Omit<BaseProps, 'placeholder'> & {
-  options: SelectOption[]
-  placeholder?: string
-}) {
+}: Omit<BaseProps, 'placeholder'> & { options: SelectOption[]; placeholder?: string }) {
   const id = useId()
 
   return (
     <FieldShell id={id} label={label} required={required} hint={hint} error={error}>
       <select
         id={id}
-        className={[styles.input, styles.selectControl, error ? styles.invalid : '']
-          .filter(Boolean)
-          .join(' ')}
+        className={`${INPUT_BASE} cursor-pointer ${error ? 'border-coral' : 'border-line'}`}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         disabled={disabled}
@@ -292,28 +252,30 @@ export function ToggleField({
   const id = useId()
 
   return (
-    <div className={styles.toggleRow}>
+    <div className="flex items-start gap-3">
       <button
         type="button"
         id={id}
         role="switch"
         aria-checked={checked}
-        className={[styles.toggle, checked ? styles.toggleOn : '']
-          .filter(Boolean)
-          .join(' ')}
         onClick={() => onChange(!checked)}
         disabled={disabled}
         aria-describedby={description ? `${id}-description` : undefined}
+        className={`relative mt-0.5 h-6 w-11 shrink-0 rounded-full transition-colors duration-200 ${checked ? 'bg-brand-deep' : 'bg-line'}`}
       >
-        <span className={styles.toggleKnob} aria-hidden="true" />
+        <span
+          aria-hidden
+          className="absolute top-0.5 h-5 w-5 rounded-full bg-paper shadow transition-transform duration-200"
+          style={{ left: checked ? '22px' : '2px' }}
+        />
       </button>
 
-      <div className={styles.toggleText}>
-        <label htmlFor={id} className={styles.toggleLabel}>
+      <div>
+        <label htmlFor={id} className="text-[0.95rem] font-medium text-ink">
           {label}
         </label>
         {description && (
-          <p id={`${id}-description`} className={styles.hint}>
+          <p id={`${id}-description`} className="mt-0.5 text-[0.82rem] text-ink-soft">
             {description}
           </p>
         )}
@@ -326,35 +288,43 @@ export function ToggleField({
 // Layout
 // -----------------------------------------------------------------------------
 
-export function FormPanel({
-  title,
-  description,
-  children,
-}: {
-  title: string
-  description?: string
-  children: ReactNode
-}) {
+export function FormPanel({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
   return (
-    <section className={styles.panel}>
-      <div className={styles.panelHeader}>
-        <h2 className={styles.panelTitle}>{title}</h2>
-        {description && <p className={styles.panelDescription}>{description}</p>}
+    <section className="rounded-card border border-line bg-paper p-6 md:p-7">
+      <div className="mb-5">
+        <h2 className="font-display text-[1.15rem] font-semibold text-ink">{title}</h2>
+        {description && <p className="mt-1 text-[0.9rem] text-ink-soft">{description}</p>}
       </div>
-      <div className={styles.panelBody}>{children}</div>
+      <div className="grid gap-5">{children}</div>
     </section>
   )
 }
 
 /** Side-by-side fields that stack on narrow screens. */
 export function FieldRow({ children }: { children: ReactNode }) {
-  return <div className={styles.row}>{children}</div>
+  return <div className="grid gap-5 sm:grid-cols-2">{children}</div>
 }
 
 /** Sticky save bar so the action stays reachable on a long form. */
 export function FormActions({ children }: { children: ReactNode }) {
-  return <div className={styles.actions}>{children}</div>
+  return (
+    <div className="sticky bottom-0 z-10 -mx-1 flex flex-wrap items-center gap-3 border-t border-line bg-paper-2/95 px-1 py-4 backdrop-blur">
+      {children}
+    </div>
+  )
 }
+
+const BUTTON_VARIANTS = {
+  primary: 'bg-brand text-ink hover:bg-brand-deep',
+  secondary: 'border border-line bg-paper text-ink hover:bg-card',
+  danger: 'bg-coral text-paper hover:opacity-90',
+  ghost: 'bg-transparent text-ink-soft hover:text-ink',
+} as const
+
+const BUTTON_SIZES = {
+  sm: 'px-3.5 py-1.5 text-[0.85rem]',
+  md: 'px-5 py-2.5 text-[0.92rem]',
+} as const
 
 export function AdminButton({
   children,
@@ -367,16 +337,16 @@ export function AdminButton({
   children: ReactNode
   onClick?: () => void
   type?: 'button' | 'submit'
-  variant?: 'primary' | 'secondary' | 'danger' | 'ghost'
+  variant?: keyof typeof BUTTON_VARIANTS
   disabled?: boolean
-  size?: 'sm' | 'md'
+  size?: keyof typeof BUTTON_SIZES
 }) {
   return (
     <button
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={[styles.button, styles[variant], styles[size]].join(' ')}
+      className={`btn inline-flex items-center gap-1.5 rounded-full font-medium disabled:cursor-not-allowed disabled:opacity-50 ${BUTTON_VARIANTS[variant]} ${BUTTON_SIZES[size]}`}
     >
       {children}
     </button>

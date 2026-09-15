@@ -1,7 +1,10 @@
+'use client'
+
 import { useEffect, useState, type FormEvent } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import Link from 'next/link'
+import { useParams, useRouter } from 'next/navigation'
 import { Icon } from '@/components/ui/Icon'
-import { toEventForm, toEventItem } from '@/content/mappers'
+import { toEventForm, toEventItem } from '@/lib/mappers'
 import { slugify } from '@/lib/slug'
 import {
   COLLECTIONS,
@@ -27,7 +30,7 @@ import { Spinner } from '../../components/Spinner'
 import { useToast } from '../../components/Toast'
 import {
   deleteRecord,
-  describeFirestoreError,
+  describeApiError,
   getRecord,
   putRecord,
 } from '../../lib/crud'
@@ -117,7 +120,7 @@ function uniqueFieldName(label: string, existing: EventFormField[], selfId: stri
 
 export function EventFormBuilder() {
   const { eventId } = useParams<{ eventId: string }>()
-  const navigate = useNavigate()
+  const router = useRouter()
   const toast = useToast()
 
   const [event, setEvent] = useState<EventItem | null>(null)
@@ -147,7 +150,7 @@ export function EventFormBuilder() {
         setEvent(loadedEvent)
         setForm(loadedForm ?? { ...DEFAULTS, eventId, fields: [] })
       } catch (caught) {
-        if (!cancelled) setError(describeFirestoreError(caught))
+        if (!cancelled) setError(describeApiError(caught))
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -274,7 +277,7 @@ export function EventFormBuilder() {
       setDirty(false)
       toast.success('Registration form saved.')
     } catch (caught) {
-      toast.error(describeFirestoreError(caught))
+      toast.error(describeApiError(caught))
     } finally {
       setSaving(false)
     }
@@ -287,9 +290,9 @@ export function EventFormBuilder() {
     try {
       await deleteRecord(COLLECTIONS.eventForms, eventId)
       toast.success('Registration form removed.')
-      navigate('/admin/event-forms', { replace: true })
+      router.replace('/admin/event-forms')
     } catch (caught) {
-      toast.error(describeFirestoreError(caught))
+      toast.error(describeApiError(caught))
     } finally {
       setDeleting(false)
     }
@@ -324,7 +327,7 @@ export function EventFormBuilder() {
         description="Visitors fill this in on the event page. Submissions appear under Registrations."
         backTo={{ to: '/admin/event-forms', label: 'All event forms' }}
         actions={
-          <Link to={`/admin/registrations?event=${event.id}`} className={shared.viewLink}>
+          <Link href={`/admin/registrations?event=${event.id}`} className={shared.viewLink}>
             View registrations
             <Icon name="arrowRight" size={14} />
           </Link>
@@ -542,7 +545,7 @@ export function EventFormBuilder() {
         </AdminButton>
         <AdminButton
           variant="secondary"
-          onClick={() => navigate('/admin/event-forms')}
+          onClick={() => router.push('/admin/event-forms')}
         >
           Cancel
         </AdminButton>

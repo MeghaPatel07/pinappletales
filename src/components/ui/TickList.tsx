@@ -1,5 +1,4 @@
 import { Icon } from './Icon'
-import styles from './TickList.module.css'
 
 type TickListProps = {
   items: readonly string[]
@@ -9,29 +8,21 @@ type TickListProps = {
   className?: string
 }
 
-export function TickList({
-  items,
-  size = 'default',
-  tone = 'light',
-  className,
-}: TickListProps) {
+export function TickList({ items, size = 'default', tone = 'light', className }: TickListProps) {
   return (
-    <ul
-      className={[
-        styles.list,
-        size === 'compact' ? styles.compact : '',
-        tone === 'dark' ? styles.dark : '',
-        className,
-      ]
-        .filter(Boolean)
-        .join(' ')}
-    >
+    <ul className={['flex flex-col', size === 'compact' ? 'gap-2' : 'gap-3', className].filter(Boolean).join(' ')}>
       {items.map((item) => (
-        <li key={item} className={styles.item}>
-          <span className={styles.marker} aria-hidden="true">
+        <li key={item} className="flex items-start gap-2.5">
+          <span
+            className={`mt-0.5 grid shrink-0 place-items-center rounded-full ${
+              tone === 'dark' ? 'bg-paper/15 text-paper' : 'bg-brand text-ink'
+            }`}
+            style={{ width: 20, height: 20 }}
+            aria-hidden
+          >
             <Icon name="check" size={12} />
           </span>
-          <span>{item}</span>
+          <span className={tone === 'dark' ? 'text-paper/90' : 'text-ink-soft'}>{item}</span>
         </li>
       ))}
     </ul>

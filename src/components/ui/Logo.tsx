@@ -1,4 +1,3 @@
-import styles from './Logo.module.css'
 import { site } from '@/config/site'
 
 /** Intrinsic size of public/logo.png — declared to reserve space and avoid CLS. */
@@ -32,7 +31,7 @@ export function Logo({
       alt={alt}
       loading={loading}
       decoding="async"
-      className={[styles.logo, className].filter(Boolean).join(' ')}
+      className={['h-10 w-auto', className].filter(Boolean).join(' ')}
     />
   )
 }

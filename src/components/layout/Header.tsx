@@ -1,128 +1,131 @@
+'use client'
+
 import { useEffect, useState } from 'react'
-import { Link, NavLink, useLocation } from 'react-router-dom'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { primaryNav, site } from '@/config/site'
-import { Button } from '@/components/ui/Button'
-import { Icon } from '@/components/ui/Icon'
 import { Logo } from '@/components/ui/Logo'
-import styles from './Header.module.css'
 
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const location = useLocation()
+  const pathname = usePathname()
 
-  // Close the mobile panel whenever the route changes.
   useEffect(() => {
     setMenuOpen(false)
-  }, [location.pathname])
+  }, [pathname])
 
-  // Solidify the bar once the hero starts scrolling under it.
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 12)
+    const onScroll = () => setScrolled(window.scrollY > 32)
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  // Lock body scroll and allow Escape to dismiss while the panel is open.
   useEffect(() => {
     if (!menuOpen) return
-
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
-
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setMenuOpen(false)
     }
     document.addEventListener('keydown', onKeyDown)
-
     return () => {
       document.body.style.overflow = previousOverflow
       document.removeEventListener('keydown', onKeyDown)
     }
   }, [menuOpen])
 
-  return (
-    <header
-      className={[styles.header, scrolled ? styles.scrolled : '', menuOpen ? styles.open : '']
-        .filter(Boolean)
-        .join(' ')}
-    >
-      <div className={styles.inner}>
-        <Link to="/" className={styles.brand}>
-          <Logo alt={`${site.name} by ${site.founder} — home`} className={styles.logo} />
-        </Link>
+  const isActive = (path: string) => (path === '/' ? pathname === '/' : pathname.startsWith(path))
 
-        <nav className={styles.desktopNav} aria-label="Primary">
-          <ul className={styles.navList}>
-            {primaryNav.map((item) => (
-              <li key={item.path}>
-                <NavLink
-                  to={item.path}
-                  end={item.path === '/'}
-                  className={({ isActive }) =>
-                    [styles.navLink, isActive ? styles.active : ''].filter(Boolean).join(' ')
-                  }
+  return (
+    <header className="fixed inset-x-0 top-0 z-50 pt-3 md:pt-4">
+      <div className="container-1200">
+        <div
+          className={`flex h-[62px] items-center justify-between rounded-full border border-line bg-paper pl-5 pr-3 transition-shadow duration-500 ${
+            scrolled ? 'shadow-[0_16px_40px_-24px_rgba(36,31,24,0.5)]' : 'shadow-[0_8px_26px_-22px_rgba(36,31,24,0.4)]'
+          }`}
+        >
+          <Link href="/" className="flex items-center" aria-label={`${site.name} — by ${site.founder}, home`}>
+            <Logo alt={`${site.name} by ${site.founder} — home`} />
+          </Link>
+
+          <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary">
+            {primaryNav.map((item) => {
+              const active = isActive(item.path)
+              return (
+                <Link
+                  key={item.path}
+                  href={item.path}
+                  className={`rounded-full px-3.5 py-2 text-[0.9rem] transition-colors duration-300 ${
+                    active ? 'bg-brand text-ink' : 'text-ink-soft hover:bg-ink/5'
+                  }`}
                 >
                   {item.label}
-                </NavLink>
-              </li>
-            ))}
-          </ul>
-        </nav>
+                </Link>
+              )
+            })}
+          </nav>
 
-        <div className={styles.actions}>
-          <Button to="/contact" variant="dark" className={styles.desktopCta}>
-            Book a Session
-          </Button>
+          <div className="hidden lg:block">
+            <Link
+              href="/contact"
+              className="btn arrow-move rounded-full bg-ink px-5 py-2.5 text-[0.9rem] font-medium text-paper"
+            >
+              Book a Session <span className="arrow" aria-hidden>→</span>
+            </Link>
+          </div>
 
           <button
-            type="button"
-            className={styles.menuToggle}
-            onClick={() => setMenuOpen((open) => !open)}
+            className="p-2.5 text-ink lg:hidden"
             aria-expanded={menuOpen}
-            aria-controls="mobile-menu"
+            aria-label="Toggle menu"
+            onClick={() => setMenuOpen((open) => !open)}
           >
-            <Icon name={menuOpen ? 'close' : 'menu'} size={22} />
-            <span className="visually-hidden">
-              {menuOpen ? 'Close menu' : 'Open menu'}
-            </span>
+            <div className="w-[22px]">
+              <span
+                className="mb-[5px] block h-0.5 bg-ink transition-all"
+                style={{ transform: menuOpen ? 'translateY(7px) rotate(45deg)' : 'none' }}
+              />
+              <span
+                className="mb-[5px] block h-0.5 bg-ink transition-opacity"
+                style={{ opacity: menuOpen ? 0 : 1 }}
+              />
+              <span
+                className="block h-0.5 bg-ink transition-all"
+                style={{ transform: menuOpen ? 'translateY(-7px) rotate(-45deg)' : 'none' }}
+              />
+            </div>
           </button>
         </div>
       </div>
 
-      <div
-        id="mobile-menu"
-        className={styles.mobilePanel}
-        hidden={!menuOpen}
-        aria-label="Primary"
-      >
-        <nav>
-          <ul className={styles.mobileList}>
+      {menuOpen && (
+        <div className="container-1200 lg:hidden">
+          <nav
+            className="mt-2 flex flex-col overflow-hidden rounded-3xl border border-line bg-paper py-2 shadow-[0_16px_40px_-24px_rgba(36,31,24,0.5)]"
+            aria-label="Mobile"
+          >
             {primaryNav.map((item) => (
-              <li key={item.path}>
-                <NavLink
-                  to={item.path}
-                  end={item.path === '/'}
-                  className={({ isActive }) =>
-                    [styles.mobileLink, isActive ? styles.mobileActive : '']
-                      .filter(Boolean)
-                      .join(' ')
-                  }
-                >
-                  {item.label}
-                </NavLink>
-              </li>
+              <Link
+                key={item.path}
+                href={item.path}
+                onClick={() => setMenuOpen(false)}
+                className="px-5 py-2.5 text-[1.02rem] text-ink"
+              >
+                {item.label}
+              </Link>
             ))}
-          </ul>
-        </nav>
-        <div className={styles.mobileFooter}>
-          <Button to="/contact" size="lg" block>
-            Book a Session
-          </Button>
-          <p className={styles.mobileNote}>{site.promise}</p>
+            <Link
+              href="/contact"
+              onClick={() => setMenuOpen(false)}
+              className="btn mx-4 mt-2 justify-center rounded-full bg-brand px-5 py-3 text-[0.95rem] font-medium text-ink"
+            >
+              Book a Session
+            </Link>
+          </nav>
         </div>
-      </div>
+      )}
     </header>
   )
 }

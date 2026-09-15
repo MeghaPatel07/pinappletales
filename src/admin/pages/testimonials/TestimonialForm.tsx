@@ -1,6 +1,8 @@
+'use client'
+
 import { useCallback, useState, type FormEvent } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import { toTestimonial } from '@/content/mappers'
+import { useParams, useRouter } from 'next/navigation'
+import { toTestimonial } from '@/lib/mappers'
 import { COLLECTIONS, type Testimonial } from '@/types/content'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
 import { AdminButton, FormActions, FormPanel, TextAreaField, TextField, ToggleField } from '../../components/Form'
@@ -28,7 +30,7 @@ const BLANK: Fields = {
 
 export function TestimonialForm() {
   const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
+  const router = useRouter()
   const toast = useToast()
   const [fields, setFields] = useState<Fields>(BLANK)
   const [errors, setErrors] = useState<Partial<Record<'testimonial' | 'name', string>>>({})
@@ -78,7 +80,7 @@ export function TestimonialForm() {
       showOnHome: fields.showOnHome,
     })
 
-    if (savedId && isNew) navigate(`/admin/testimonials/${savedId}`, { replace: true })
+    if (savedId && isNew) router.replace(`/admin/testimonials/${savedId}`)
   }
 
   if (editor.loading) return <Spinner full label="Loading testimonial…" />
@@ -98,7 +100,7 @@ export function TestimonialForm() {
       </FormPanel>
       <FormActions>
         <AdminButton type="submit" disabled={editor.saving}>{editor.saving ? 'Saving…' : isNew ? 'Create testimonial' : 'Save changes'}</AdminButton>
-        <AdminButton variant="secondary" onClick={() => navigate('/admin/testimonials')}>Cancel</AdminButton>
+        <AdminButton variant="secondary" onClick={() => router.push('/admin/testimonials')}>Cancel</AdminButton>
         <span className={styles.actionSpacer} />
         {editor.dirty && <span className={styles.savedNote}>Unsaved changes</span>}
         {!isNew && <AdminButton variant="danger" onClick={() => setConfirmDelete(true)}>Delete</AdminButton>}

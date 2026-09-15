@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * Confirmation before a destructive action.
  *
@@ -7,7 +9,6 @@
 
 import { useEffect, useRef } from 'react'
 import { AdminButton } from './Form'
-import styles from './ConfirmDialog.module.css'
 
 type ConfirmDialogProps = {
   open: boolean
@@ -43,7 +44,6 @@ export function ConfirmDialog({
     if (!open && dialog.open) dialog.close()
   }, [open])
 
-  // Escape fires `cancel` rather than a click, so it needs handling separately.
   useEffect(() => {
     const dialog = dialogRef.current
     if (!dialog) return
@@ -58,21 +58,21 @@ export function ConfirmDialog({
   }, [onCancel, busy])
 
   return (
-    <dialog ref={dialogRef} className={styles.dialog} aria-labelledby="confirm-title">
-      <h2 id="confirm-title" className={styles.title}>
+    <dialog
+      ref={dialogRef}
+      className="w-[min(28rem,90vw)] rounded-card border border-line bg-paper p-6 text-ink shadow-[0_40px_80px_-32px_rgba(36,31,24,0.5)] backdrop:bg-ink/40"
+      aria-labelledby="confirm-title"
+    >
+      <h2 id="confirm-title" className="font-display text-[1.2rem] font-semibold">
         {title}
       </h2>
-      <p className={styles.message}>{message}</p>
+      <p className="mt-2 text-[0.95rem] text-ink-soft">{message}</p>
 
-      <div className={styles.actions}>
+      <div className="mt-6 flex justify-end gap-3">
         <AdminButton variant="secondary" onClick={onCancel} disabled={busy}>
           {cancelLabel}
         </AdminButton>
-        <AdminButton
-          variant={destructive ? 'danger' : 'primary'}
-          onClick={onConfirm}
-          disabled={busy}
-        >
+        <AdminButton variant={destructive ? 'danger' : 'primary'} onClick={onConfirm} disabled={busy}>
           {busy ? 'Working…' : confirmLabel}
         </AdminButton>
       </div>

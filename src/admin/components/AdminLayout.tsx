@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react'
-import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
+'use client'
+
+import { useEffect, useState, type ReactNode } from 'react'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { Icon } from '@/components/ui/Icon'
 import { Logo } from '@/components/ui/Logo'
 import { site } from '@/config/site'
 import { useAuth } from '../auth/AuthProvider'
-import styles from './AdminLayout.module.css'
 
 type NavEntry = {
   to: string
@@ -23,15 +25,14 @@ const NAV: readonly NavEntry[] = [
   { to: '/admin/registrations', label: 'Registrations' },
 ]
 
-export function AdminLayout() {
+export function AdminLayout({ children }: { children: ReactNode }) {
   const { session, signOut } = useAuth()
-  const location = useLocation()
+  const pathname = usePathname()
   const [navOpen, setNavOpen] = useState(false)
 
-  // Close the mobile drawer on navigation.
   useEffect(() => {
     setNavOpen(false)
-  }, [location.pathname])
+  }, [pathname])
 
   useEffect(() => {
     if (!navOpen) return
@@ -42,48 +43,46 @@ export function AdminLayout() {
     return () => document.removeEventListener('keydown', onKeyDown)
   }, [navOpen])
 
+  const isActive = (entry: NavEntry) => (entry.end ? pathname === entry.to : pathname.startsWith(entry.to))
+
   return (
-    <div className={styles.shell}>
+    <div className="flex min-h-screen bg-paper-2">
       <aside
         id="admin-nav"
-        className={[styles.sidebar, navOpen ? styles.sidebarOpen : '']
-          .filter(Boolean)
-          .join(' ')}
+        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-line bg-paper transition-transform duration-300 lg:static lg:translate-x-0 ${
+          navOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
       >
-        <Link to="/admin" className={styles.brand}>
-          <Logo alt={`${site.name} admin`} className={styles.logo} />
-          <span className={styles.brandLabel}>Admin</span>
+        <Link href="/admin" className="flex items-center gap-2 border-b border-line px-5 py-5">
+          <Logo alt={`${site.name} admin`} className="h-8" />
+          <span className="eyebrow text-ink-soft">Admin</span>
         </Link>
 
-        <nav className={styles.nav} aria-label="Admin sections">
-          <ul className={styles.navList}>
+        <nav className="flex-1 overflow-y-auto px-3 py-4" aria-label="Admin sections">
+          <ul className="flex flex-col gap-1">
             {NAV.map((entry) => (
               <li key={entry.to}>
-                <NavLink
-                  to={entry.to}
-                  end={entry.end}
-                  className={({ isActive }) =>
-                    [styles.navLink, isActive ? styles.navActive : '']
-                      .filter(Boolean)
-                      .join(' ')
-                  }
+                <Link
+                  href={entry.to}
+                  className={`block rounded-full px-4 py-2 text-[0.92rem] font-medium transition-colors ${
+                    isActive(entry) ? 'bg-brand text-ink' : 'text-ink-soft hover:bg-paper-2 hover:text-ink'
+                  }`}
                 >
                   {entry.label}
-                </NavLink>
+                </Link>
               </li>
             ))}
           </ul>
         </nav>
 
-        <div className={styles.sidebarFooter}>
+        <div className="border-t border-line p-4">
           <a
             href="/"
-            className={styles.siteLink}
+            className="arrow-move inline-flex items-center gap-1.5 text-[0.85rem] font-medium text-ink-soft hover:text-ink"
             target="_blank"
             rel="noopener noreferrer"
           >
-            View website
-            <Icon name="arrowRight" size={14} />
+            View website <Icon name="arrowRight" size={14} className="arrow" />
           </a>
         </div>
       </aside>
@@ -91,40 +90,40 @@ export function AdminLayout() {
       {navOpen && (
         <button
           type="button"
-          className={styles.scrim}
+          className="fixed inset-0 z-30 bg-ink/30 lg:hidden"
           onClick={() => setNavOpen(false)}
           aria-label="Close navigation"
         />
       )}
 
-      <div className={styles.main}>
-        <header className={styles.topbar}>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="sticky top-0 z-20 flex items-center justify-between gap-4 border-b border-line bg-paper px-5 py-3.5">
           <button
             type="button"
-            className={styles.navToggle}
+            className="grid h-9 w-9 place-items-center rounded-full text-ink hover:bg-paper-2 lg:hidden"
             onClick={() => setNavOpen((open) => !open)}
             aria-expanded={navOpen}
             aria-controls="admin-nav"
           >
             <Icon name={navOpen ? 'close' : 'menu'} size={20} />
-            <span className="visually-hidden">
-              {navOpen ? 'Close navigation' : 'Open navigation'}
-            </span>
+            <span className="visually-hidden">{navOpen ? 'Close navigation' : 'Open navigation'}</span>
           </button>
 
-          <div className={styles.account}>
-            <span className={styles.accountEmail} title={session?.email}>
+          <div className="ml-auto flex items-center gap-4">
+            <span className="hidden text-[0.85rem] text-ink-soft sm:inline" title={session?.email}>
               {session?.email}
             </span>
-            <button type="button" className={styles.signOut} onClick={signOut}>
+            <button
+              type="button"
+              className="rounded-full border border-line px-4 py-1.5 text-[0.85rem] font-medium text-ink hover:bg-paper-2"
+              onClick={signOut}
+            >
               Sign out
             </button>
           </div>
         </header>
 
-        <main className={styles.content}>
-          <Outlet />
-        </main>
+        <main className="flex-1 px-5 py-8 md:px-8">{children}</main>
       </div>
     </div>
   )

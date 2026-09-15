@@ -1,8 +1,11 @@
+'use client'
+
 import { useCallback, useState, type FormEvent } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import Link from 'next/link'
+import { useParams, useRouter } from 'next/navigation'
 import { Icon } from '@/components/ui/Icon'
 import { SITE_URL } from '@/config/site'
-import { toEventItem } from '@/content/mappers'
+import { toEventItem } from '@/lib/mappers'
 import { today } from '@/lib/date'
 import { isValidSlug, slugify } from '@/lib/slug'
 import { COLLECTIONS, type CloudinaryImage, type EventItem } from '@/types/content'
@@ -55,7 +58,7 @@ type Errors = Partial<Record<'name' | 'slug' | 'date' | 'description', string>>
 
 export function EventForm() {
   const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
+  const router = useRouter()
   const toast = useToast()
 
   const [fields, setFields] = useState<Fields>(BLANK)
@@ -141,7 +144,7 @@ export function EventForm() {
     })
 
     if (savedId && isNew) {
-      navigate(`/admin/events/${savedId}`, { replace: true })
+      router.replace(`/admin/events/${savedId}`)
       setSlugLocked(true)
     }
   }
@@ -166,7 +169,7 @@ export function EventForm() {
         actions={
           !isNew ? (
             <>
-              <Link to={`/admin/event-forms/${id}`} className={styles.viewLink}>
+              <Link href={`/admin/event-forms/${id}`} className={styles.viewLink}>
                 Registration form
                 <Icon name="arrowRight" size={14} />
               </Link>
@@ -298,7 +301,7 @@ export function EventForm() {
         <AdminButton type="submit" disabled={editor.saving}>
           {editor.saving ? 'Saving…' : isNew ? 'Create event' : 'Save changes'}
         </AdminButton>
-        <AdminButton variant="secondary" onClick={() => navigate('/admin/events')}>
+        <AdminButton variant="secondary" onClick={() => router.push('/admin/events')}>
           Cancel
         </AdminButton>
 

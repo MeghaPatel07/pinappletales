@@ -1,6 +1,7 @@
+'use client'
+
 import type { ReactNode } from 'react'
-import { Link } from 'react-router-dom'
-import styles from './Button.module.css'
+import Link from 'next/link'
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'onDark' | 'dark'
 type Size = 'md' | 'lg'
@@ -15,7 +16,7 @@ type CommonProps = {
 }
 
 type ButtonAsLink = CommonProps & {
-  /** Internal route — rendered with react-router's Link. */
+  /** Internal route — rendered with next/link. */
   to: string
   href?: never
   onClick?: never
@@ -37,26 +38,40 @@ type ButtonAsButton = CommonProps & {
   href?: never
   onClick?: () => void
   type?: 'button' | 'submit'
+  disabled?: boolean
 }
 
 type ButtonProps = ButtonAsLink | ButtonAsAnchor | ButtonAsButton
 
+const VARIANT_CLASSES: Record<Variant, string> = {
+  primary: 'bg-brand text-ink hover:bg-brand-deep',
+  dark: 'bg-ink text-paper hover:bg-ink/90',
+  secondary: 'border border-[1.5px] border-ink bg-transparent text-ink hover:bg-ink/5',
+  onDark: 'border border-[1.5px] border-paper/60 bg-transparent text-paper hover:bg-paper/10',
+  ghost: 'bg-transparent text-ink hover:bg-ink/5',
+}
+
+const SIZE_CLASSES: Record<Size, string> = {
+  md: 'px-6 py-3 text-[0.95rem]',
+  lg: 'px-7 py-3.5 text-[1rem]',
+}
+
 export function Button(props: ButtonProps) {
   const { children, variant = 'primary', size = 'md', className, block } = props
 
-  const classNames = [
-    styles.button,
-    styles[variant],
-    styles[size],
-    block ? styles.block : '',
-    className,
+  const classes = [
+    'btn arrow-move inline-flex items-center justify-center gap-2 rounded-full font-medium',
+    VARIANT_CLASSES[variant],
+    SIZE_CLASSES[size],
+    block ? 'w-full sm:w-auto' : '',
+    className ?? '',
   ]
     .filter(Boolean)
     .join(' ')
 
   if ('to' in props && props.to) {
     return (
-      <Link to={props.to} className={classNames}>
+      <Link href={props.to} className={classes}>
         {children}
       </Link>
     )
@@ -67,7 +82,7 @@ export function Button(props: ButtonProps) {
     return (
       <a
         href={props.href}
-        className={classNames}
+        className={classes}
         {...(isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
       >
         {children}
@@ -75,9 +90,9 @@ export function Button(props: ButtonProps) {
     )
   }
 
-  const { type = 'button', onClick } = props as ButtonAsButton
+  const { type = 'button', onClick, disabled } = props as ButtonAsButton
   return (
-    <button type={type} onClick={onClick} className={classNames}>
+    <button type={type} onClick={onClick} disabled={disabled} className={classes}>
       {children}
     </button>
   )

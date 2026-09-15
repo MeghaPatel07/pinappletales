@@ -1,65 +1,34 @@
 # Pineappletales — Admin & Content Setup
 
-The site now has a password-protected admin at `/admin` that manages four
-content masters, and three public sections that render what it publishes.
+Next.js (App Router) is now both the frontend and the backend: pages are
+Server Components reading straight from MongoDB, and the admin panel at
+`/admin` talks to a REST API under `/api/admin/**`, protected by a JWT
+access/refresh token pair. There is no more Firebase anywhere in this
+project.
 
 ```
 Admin                        Public
 /admin/blogs             →   /blog, /blog/<slug>
-/admin/events            →   /events, /events/<slug>
-/admin/podcasts          →   /podcast
-/admin/event-forms       →   the registration form on each event page
-/admin/registrations     →   (read-only: what visitors submitted)
+/admin/events             →   /events, /events/<slug>
+/admin/podcasts            →   /podcast
+/admin/event-forms          →   the registration form on each event page
+/admin/registrations        →   (read-only: what visitors submitted)
 ```
 
 ---
 
 ## 1. What you must fill in before it works
 
-Open `.env` in the project root. Four values are blank and only you can supply
-them. Everything else is already filled in.
+Copy `.env.example` to `.env` and fill in:
 
 | Variable | Where to get it |
 |---|---|
-| `VITE_FIREBASE_API_KEY` | Firebase console → Project settings → General → Your apps → Web app → SDK setup and configuration |
-| `VITE_FIREBASE_APP_ID` | same screen |
-| `VITE_CLOUDINARY_CLOUD_NAME` | Cloudinary console → Settings → the "cloud name" of your product environment |
-| `VITE_CLOUDINARY_UPLOAD_PRESET` | you create this — see step 3 |
+| `MONGODB_URI` | Your MongoDB Atlas connection string (or a local `mongodb://localhost:27017/pineappletales`) |
+| `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` | Any strong random string, e.g. `openssl rand -base64 48`. Two different values. |
+| `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_CLOUD_NAME` | Cloudinary console → Settings → the "cloud name" of your product environment (same value in both) |
+| `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | Cloudinary console → Settings → API Keys |
 
-If there is no web app on the Firebase project yet, create one:
-**Project settings → Your apps → Add app → Web**. No hosting setup is required
-at that point.
-
-> Restart `npm run dev` after editing `.env`. Vite only reads it at startup.
-
-**The admin tells you if something is missing.** The dashboard shows a "Finish
-the setup" panel listing exactly which variables are still blank, and the login
-screen says so too. Nothing fails silently.
-
----
-
-## 2. Firebase setup
-
-Three things to switch on in the Firebase console for project `pineappletales`:
-
-1. **Authentication → Sign-in method → Email/Password → Enable.**
-   Without this the seed script cannot create the admin account.
-
-2. **Firestore Database → Create database.** Start in production mode; the rules
-   in this repo replace the defaults.
-
-3. **Deploy the rules and indexes:**
-
-   ```bash
-   npm i -g firebase-tools     # once
-   firebase login              # once
-   firebase use pineappletales
-   npm run deploy:rules
-   ```
-
-   This pushes `firestore.rules` and `firestore.indexes.json`. The indexes take
-   a minute or two to build; until they finish, list queries may return nothing
-   and Firestore logs a link in the browser console.
+> Restart `npm run dev` after editing `.env`.
 
 ### Create the admin login
 
@@ -67,195 +36,103 @@ Three things to switch on in the Firebase console for project `pineappletales`:
 npm run seed:admin
 ```
 
-Creates `admin@gmail.com` / `1234567` as you asked. To use different details:
+Creates `admin@gmail.com` / `1234567`. To use different details:
 
 ```bash
 npm run seed:admin -- someone@example.com theirpassword "Their Name"
 ```
 
-Admin access needs **two** things, and the script does both:
+This writes an `AdminUser` document straight into MongoDB with a bcrypt
+password hash — no email/password sign-up flow exists, admins are only ever
+created this way (or by editing MongoDB directly).
 
-1. a Firebase Auth user — proves who you are
-2. a document at `admins/{uid}` — grants permission
+> **Change the password before this is publicly reachable.**
 
-The rules deliberately block clients from writing to `admins`, so if the rules
-are already deployed the script cannot create that second document itself. When
-that happens it prints the exact document to add — collection `admins`, document
-ID = the UID it just printed — for you to paste into the Firestore console. It
-takes about twenty seconds.
+---
 
-> **Change the password before this is publicly reachable.** `1234567` is fine while
-> you are building; it is not fine on a live site. Change it in Firebase console
-> → Authentication → Users → ⋮ → Reset password.
+## 2. Authentication model
+
+- Signing in (`/admin/login`) posts to `POST /api/auth/login`, which checks
+  the email/password against MongoDB and returns a short-lived **access
+  token** (15 minutes) plus sets a long-lived **refresh token** as an
+  `httpOnly` cookie (30 days).
+- The admin SPA keeps the access token in memory only (never
+  `localStorage`) and sends it as `Authorization: Bearer <token>` on every
+  `/api/admin/**` call.
+- `src/middleware.ts` is the one authentication middleware: it verifies the
+  access token on every `/api/admin/**` request (401 JSON if missing/
+  invalid) and the refresh-token cookie on every `/admin/**` page request
+  (redirects to `/admin/login` if missing/invalid).
+- On a 401, the browser silently calls `POST /api/auth/refresh` (using the
+  cookie) for a new access token and retries once before giving up.
 
 ---
 
 ## 3. Cloudinary setup
 
-Images are uploaded straight from the browser. There are two ways to authorise
-that, and the code supports both behind one switch — you do **not** change any
-component code to move between them.
+Uploads always go through the **signed** path — `POST
+/api/admin/uploads/sign` — which is verified the same way as every other
+`/api/admin/**` route (the JWT access token), rather than a Firebase ID
+token. There's no unsigned-preset option any more since there's always a
+real backend now.
 
-### Option A — unsigned preset (the default, no server)
-
-Cloudinary console → **Settings → Upload → Upload presets → Add upload preset**:
-
-- Signing mode: **Unsigned**
-- Folder: `pineappletales`
-- Allowed formats: `jpg, png, webp, avif`
-- Max file size: `5000000` (5 MB)
-
-Put the preset's name in `VITE_CLOUDINARY_UPLOAD_PRESET`. Done.
-
-The preset name is public — it is in the JavaScript bundle — which is why it
-should be restricted to a folder, a format list and a size cap. Your API secret
-is never involved.
-
-### Option B — signed uploads (locked down)
-
-You asked whether a static signature could be stored in an env var. It cannot,
-and it is worth being clear why:
-
-- A Cloudinary signature is `SHA1(that upload's parameters + timestamp + secret)`.
-  It is bound to one upload and expires — there is no reusable value.
-- Any variable named `VITE_*` is compiled into the JavaScript that every visitor
-  downloads. A secret there is published, not protected.
-
-So the signed path needs something server-side. `api/cloudinary-sign.js` is that
-endpoint, written to run free on Vercel, Netlify or Cloudflare Pages — no
-Firebase Blaze plan needed. It refuses to sign for anyone who is not a
-signed-in admin on the allow-list.
-
-To switch over, set these in your hosting dashboard (note: **no** `VITE_`
-prefix, so they never reach the browser):
-
-```
-CLOUDINARY_API_KEY      453561363972366
-CLOUDINARY_API_SECRET   rD00pb0D-qwqSel_WTpR58h5rZY
-FIREBASE_API_KEY        <same value as VITE_FIREBASE_API_KEY>
-ADMIN_EMAILS            admin@gmail.com
-```
-
-and then set `VITE_CLOUDINARY_SIGNATURE_URL=/api/cloudinary-sign`.
-
-When that variable is set the admin uses signed uploads; when it is empty it
-uses the preset. Nothing else changes.
-
-> The API secret is in your local `.env` for reference. `.env` is gitignored.
-> Since the secret was shared in plain text, consider rotating it in the
-> Cloudinary console once you are set up.
+Console → Settings → API Keys gives you `CLOUDINARY_API_KEY` and
+`CLOUDINARY_API_SECRET`; put both in `.env` (never with a `NEXT_PUBLIC_`
+prefix — the secret must never reach the browser bundle).
 
 ---
 
 ## 4. How content reaches the website
 
-This site is prerendered — every page is a real HTML file, which is why it does
-well in search. Database-driven content works in **two** ways at once:
+Public pages (`/`, `/blog`, `/blog/<slug>`, `/events`, `/events/<slug>`,
+`/podcast`) are async Server Components that query MongoDB directly via
+`src/lib/content.ts` — no client-side fetch, no separate prerender step.
+`export const revalidate = 60` on each of them means a page rendered more
+than 60 seconds ago is regenerated in the background on the next visit
+(Next.js ISR), so publishing something in the admin shows up on the live
+site within about a minute. Blog and event detail pages also get
+`generateStaticParams`, so every known slug is pre-built at `next build`
+time and new ones render on first request after that.
 
-1. **At build time.** `npm run build` reads published records from Firestore and
-   writes a real file per post and event — `dist/blog/<slug>/index.html` — with
-   its own `<title>`, canonical URL, Open Graph tags and JSON-LD, plus a sitemap
-   entry. Crawlers and link previews get the full article with no JavaScript.
-
-2. **At runtime.** Pages also fetch from Firestore in the browser. So something
-   published in the admin **appears on the live site immediately**, without
-   waiting for a deploy. It gains its prerendered file at the next build.
-
-The practical rule: publish freely, and redeploy when convenient so new posts
-get their fully static version and sitemap entry.
-
-### Performance
-
-The admin's dependencies — Firebase SDK, the Jodit editor, DOMPurify — are
-loaded only when someone opens `/admin`:
-
-| Bundle | Gzipped | Who downloads it |
-|---|---|---|
-| Public site JS | ~105 KB | every visitor |
-| Public site CSS | ~12 KB | every visitor |
-| Admin JS | ~200 KB | only on `/admin` |
-| Editor (Jodit) JS + CSS | ~209 KB + ~24 KB | only when editing a body |
-
-Public pages read Firestore over its REST API rather than the SDK, which is what
-keeps the visitor-facing bundle small. Images go through Cloudinary with
-`f_auto,q_auto` and a `srcset`, so a phone never downloads a desktop-sized file.
+The same public data is also available over REST — `/api/blogs`,
+`/api/events`, `/api/podcasts`, `/api/testimonials/home`,
+`/api/event-forms/<eventId>` — for anything that needs to fetch it
+client-side or from outside the app.
 
 ---
 
 ## 5. Using the admin
 
-**Sign in** at `/admin/login`. Every other `/admin` URL redirects here if you are
-not signed in, and returns you where you were headed after you sign in.
+**Sign in** at `/admin/login`. Every other `/admin` URL redirects here if you
+are not signed in (enforced by `middleware.ts`, so this happens before any
+admin HTML ships), and returns you where you were headed after you sign in.
 
-**Every list** has search, sorting, pagination and a per-page selector (10 / 25 /
-50 / 100). Search runs across all fields by default, or you can point it at one
-field with the dropdown beside it. All of that state lives in the URL, so a
-filtered view can be bookmarked and survives the back button.
+**Every list** has search, sorting, pagination and a per-page selector (10 /
+25 / 50 / 100). Search runs across all fields by default, or you can point it
+at one field with the dropdown beside it. All of that state lives in the URL,
+so a filtered view can be bookmarked and survives the back button.
 
-**Drafts.** Everything has a *Published* switch. Off means it is invisible to the
-website — enforced by security rules, not just hidden in the UI.
+**Drafts.** Everything has a *Published* switch. Off means it is invisible to
+the website — enforced by the public API/Server Component queries (they only
+ever select `isActive: true`), not just hidden in the UI.
 
-**Slugs** are generated from the title and stay editable. Once a record is saved
-the slug stops following the title, because it is part of a published URL that
-should not change underneath people. Duplicate slugs are rejected on save.
-
-**Images.** The banner/main image fields and the gallery upload to Cloudinary
-with a progress bar. Each image has an alt-text box — please fill it in; it is
-what screen readers announce and it helps image search.
-
-**Article bodies** use the Jodit editor. You can paste or drag images straight
-in and they upload to Cloudinary automatically rather than being embedded as
-base64. Content is sanitised when saved.
-
-**Event forms.** `/admin/event-forms` lists every event and whether it has a
-registration form. Open one to build its fields — label, type (text, email,
-phone, dropdown, single/multiple choice, date…), required, help text, options.
-"Start with name, email and phone" gives you the common case in one click. The
-event page renders exactly those fields.
-
-Answers are stored under a field's internal key, shown as `stored as ...` on
-each field. Renaming a label after submissions exist keeps the old key on
-purpose, so existing answers are not orphaned.
-
-**Registrations** are at `/admin/registrations`, filterable by event, with a CSV
-export (UTF-8 with BOM, so Excel reads accented names correctly). Visitors can
-submit but can never read submissions back — that is enforced in the rules.
+**Slugs** are generated from the title and stay editable. Once a record is
+saved the slug stops following the title, because it is part of a published
+URL that should not change underneath people. Duplicate slugs are rejected on
+save (`409` from the API).
 
 ---
 
-## 6. Data model
+## 6. Migrating from the old Firestore project
 
-```
-blogs/{id}          title, slug, shortDescription, bannerImage, date,
-                    minuteRead, description (HTML), author, isActive, isPrimary
-events/{id}         name, slug, date, shortDescription, description (HTML),
-                    mainImage, imageGallery[], isActive
-podcasts/{id}       name, slug, youtubeLink, description (HTML), date, isActive
-eventForms/{eventId}  isActive, title, intro, submitLabel, successMessage,
-                    fields[] — the document ID is the event ID
-eventRegistrations/{id}  eventId, eventName, values{}, createdAt (server time)
-admins/{uid}        email, name — presence of this document grants admin access
-```
-
-Security rules summary (`firestore.rules`):
-
-- anyone may read a record where `isActive == true`
-- only an admin may read drafts, or write anything
-- anyone may **create** a registration; only an admin may read one
-- `admins` is never writable from a browser
-
----
-
-## 7. Commands
+If you have existing content in Firestore from before this migration:
 
 ```bash
-npm run dev            # dev server
-npm run typecheck      # TypeScript, no emit
-npm run build          # typecheck + build + prerender (incl. content)
-npm run preview        # serve the built site
-npm run seed:admin     # create the admin account
-npm run deploy:rules   # push firestore.rules + indexes
+npm run migrate:firestore
 ```
 
-`npm run build` works before Firebase is configured — it prerenders the fixed
-pages, logs that no content was found, and carries on. It never blocks a deploy.
+See `.env.example` for the extra variables this needs
+(`FIREBASE_API_KEY`, `MIGRATION_ADMIN_EMAIL`, `MIGRATION_ADMIN_PASSWORD`).
+It only *reads* Firestore — nothing there is modified — and writes matching
+documents into MongoDB. Admin accounts are not migrated (Firebase never
+exposes password hashes); run `npm run seed:admin` afterwards.

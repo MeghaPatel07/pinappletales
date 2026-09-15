@@ -1,9 +1,12 @@
+'use client'
+
 import { useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Icon } from '@/components/ui/Icon'
 import { formatDateShort } from '@/lib/date'
 import { youtubeId, youtubeThumbnail } from '@/lib/youtube'
-import { toPodcast } from '@/content/mappers'
+import { toPodcast } from '@/lib/mappers'
 import { COLLECTIONS, type Podcast } from '@/types/content'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
 import { DataTable, type Column } from '../../components/DataTable'
@@ -12,11 +15,11 @@ import { EmptyState, PageHeader, StatusBadge } from '../../components/PageHeader
 import { useToast } from '../../components/Toast'
 import { useCollection } from '../../hooks/useCollection'
 import { useTableState, useUrlParam } from '../../hooks/useTableState'
-import { deleteRecord, describeFirestoreError } from '../../lib/crud'
+import { deleteRecord, describeApiError } from '../../lib/crud'
 import styles from '../shared.module.css'
 
 export function PodcastList() {
-  const navigate = useNavigate()
+  const router = useRouter()
   const toast = useToast()
   const { items, loading, error, truncated, refresh, removeLocal } =
     useCollection<Podcast>(COLLECTIONS.podcasts, toPodcast, {
@@ -66,7 +69,7 @@ export function PodcastList() {
         value: (podcast) => podcast.name,
         render: (podcast) => (
           <div className={styles.primaryCell}>
-            <Link to={`/admin/podcasts/${podcast.id}`} className={styles.cellLink}>
+            <Link href={`/admin/podcasts/${podcast.id}`} className={styles.cellLink}>
               {podcast.name || 'Untitled episode'}
             </Link>
             <span className={styles.cellSub}>{podcast.youtubeLink}</span>
@@ -121,7 +124,7 @@ export function PodcastList() {
       toast.success(`“${pendingDelete.name}” was deleted.`)
       setPendingDelete(null)
     } catch (caught) {
-      toast.error(describeFirestoreError(caught))
+      toast.error(describeApiError(caught))
     } finally {
       setDeleting(false)
     }
@@ -133,7 +136,7 @@ export function PodcastList() {
         title="Podcasts"
         description="Episodes listed at /podcast, each playing its YouTube video in place."
         actions={
-          <AdminButton onClick={() => navigate('/admin/podcasts/new')}>
+          <AdminButton onClick={() => router.push('/admin/podcasts/new')}>
             <Icon name="plus" size={16} />
             New episode
           </AdminButton>
@@ -165,7 +168,7 @@ export function PodcastList() {
             title="No episodes yet"
             message="Paste a YouTube link and the episode will appear on the podcast page."
             action={
-              <AdminButton onClick={() => navigate('/admin/podcasts/new')}>
+              <AdminButton onClick={() => router.push('/admin/podcasts/new')}>
                 Add the first episode
               </AdminButton>
             }
@@ -174,7 +177,7 @@ export function PodcastList() {
         actions={(podcast) => (
           <>
             <Link
-              to={`/admin/podcasts/${podcast.id}`}
+              href={`/admin/podcasts/${podcast.id}`}
               className={styles.iconAction}
               title="Edit"
             >

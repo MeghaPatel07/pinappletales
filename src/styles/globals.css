@@ -1,0 +1,264 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+/* =========================================================================
+   Pineappletales — design tokens, matching the Figma Make export
+   (color/type/spacing values sourced verbatim from that project's
+   src/index.css). `@theme` generates the matching Tailwind utilities
+   (bg-brand, text-ink, font-display, rounded-card, ease-organic, ...);
+   the plain :root block below re-exposes the same values under their
+   original short names for the handful of custom classes in this file.
+   ========================================================================= */
+
+@theme {
+  --color-brand: #ffdb31;
+  --color-brand-deep: #f2c200;
+  --color-ink: #241f18;
+  --color-ink-soft: #5a5147;
+  --color-paper: #ffffff;
+  --color-paper-2: #f4ecdd;
+  --color-card: #fbf7ef;
+  --color-line: #e5dccb;
+  --color-coral: #e86f4f;
+  --color-teal: #2f5d55;
+  --color-teal-soft: #3d6f66;
+
+  --font-display: var(--font-fraunces), Georgia, serif;
+  --font-body: var(--font-work-sans), system-ui, sans-serif;
+  --font-mono-label: var(--font-dm-mono), ui-monospace, monospace;
+  --font-sans: var(--font-work-sans), system-ui, sans-serif;
+
+  --radius-card: 20px;
+
+  --ease-organic: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+:root {
+  --brand: #ffdb31;
+  --brand-deep: #f2c200;
+  --ink: #241f18;
+  --ink-soft: #5a5147;
+  --paper: #ffffff;
+  --paper-2: #f4ecdd;
+  --card: #fbf7ef;
+  --line: #e5dccb;
+  --coral: #e86f4f;
+  --teal: #2f5d55;
+  --teal-soft: #3d6f66;
+
+  --radius: 20px;
+  --ease-organic: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background-color: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--brand);
+  color: var(--ink);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 1rem;
+  z-index: 100;
+  background: var(--ink);
+  color: var(--paper);
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+}
+.skip-link:focus {
+  left: 1rem;
+}
+
+/* Container used by every section — matches the Figma export's 1200px band. */
+.container-1200 {
+  width: 100%;
+  max-width: 1200px;
+  margin-inline: auto;
+  padding-inline: 24px;
+}
+
+/* Editorial eyebrow label */
+.eyebrow {
+  font-family: var(--font-mono-label);
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+/* Focus visibility */
+a:focus-visible,
+button:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Scroll reveal, armed by ScrollEffects.tsx via IntersectionObserver */
+.reveal {
+  opacity: 0;
+  transform: translateY(26px);
+  transition:
+    opacity 0.8s var(--ease-organic),
+    transform 0.8s var(--ease-organic);
+  will-change: opacity, transform;
+}
+.reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+/* Slow rotation for decorative blob shapes only — never images or text. */
+.anim-spin {
+  animation: spin-slow 48s linear infinite;
+  transform-origin: 50% 50%;
+}
+
+/* Card / surface lift */
+.lift {
+  transition:
+    transform 0.26s var(--ease-organic),
+    box-shadow 0.26s var(--ease-organic),
+    border-color 0.26s var(--ease-organic),
+    background-color 0.26s var(--ease-organic);
+}
+.lift:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 26px 46px -30px rgba(36, 31, 24, 0.42);
+}
+
+/* Button press + arrow move */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition:
+    transform 0.2s var(--ease-organic),
+    background-color 0.24s var(--ease-organic),
+    color 0.24s var(--ease-organic),
+    box-shadow 0.24s var(--ease-organic);
+}
+.btn:hover { transform: translateY(-2px); }
+.btn:active { transform: translateY(0) scale(0.98); }
+.btn .arrow,
+.arrow-move .arrow {
+  transition: transform 0.24s var(--ease-organic);
+}
+.btn:hover .arrow,
+.arrow-move:hover .arrow,
+.arrow-move:focus-visible .arrow {
+  transform: translateX(4px);
+}
+
+/* Image micro-zoom */
+.img-zoom { overflow: hidden; }
+.img-zoom img {
+  transition: transform 0.6s var(--ease-organic);
+  will-change: transform;
+}
+.img-zoom:hover img,
+.img-zoom:focus-within img {
+  transform: scale(1.03);
+}
+
+/* About — philosophy principle hover (word lifts, yellow rule draws in) */
+.about-principle-word {
+  transition: transform 0.3s var(--ease-organic);
+}
+.about-principle:hover {
+  background: var(--paper-2) !important;
+}
+.about-principle:hover .about-principle-word,
+.about-principle:focus-within .about-principle-word {
+  transform: translateY(-4px);
+}
+.about-principle:hover .about-principle-rule,
+.about-principle:focus-within .about-principle-rule {
+  width: 44px !important;
+}
+
+/* Creative spark accent */
+.sparkle {
+  transition: transform 0.3s var(--ease-organic), opacity 0.3s var(--ease-organic);
+}
+.sparkle:hover {
+  transform: rotate(4deg) scale(1.08);
+}
+
+/* Footer link hover — colour shift only */
+.footer-link {
+  transition: color 0.26s var(--ease-organic);
+}
+.footer-link:hover,
+.footer-link:focus-visible {
+  color: var(--brand) !important;
+}
+
+/* Floating WhatsApp button — a fixed circle that widens to reveal a label
+   on hover (desktop only; the width is an explicit px target so it always
+   settles back to an exact circle, unlike the old 0fr/1fr grid collapse
+   which could leave a sliver of width and break the circle). */
+.whatsapp-fab {
+  transition:
+    width 0.3s var(--ease-organic),
+    box-shadow 0.24s var(--ease-organic);
+}
+
+/* Roadmap line draw */
+.road-line {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 1.4s var(--ease-organic);
+}
+.reveal.is-in .road-line { stroke-dashoffset: 0; }
+.road-node {
+  transition:
+    transform 0.24s var(--ease-organic),
+    background-color 0.24s var(--ease-organic),
+    border-color 0.24s var(--ease-organic);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .reveal { opacity: 1; transform: none; transition: none; }
+  .anim-spin { animation: none; }
+  .road-line { transition: none; stroke-dashoffset: 0; }
+  .lift:hover, .btn:hover, .btn:active { transform: none; }
+  .img-zoom:hover img, .img-zoom:focus-within img { transform: none; }
+  * { scroll-behavior: auto !important; }
+}

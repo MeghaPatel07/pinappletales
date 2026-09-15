@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * Search / sort / pagination state for an admin list.
  *
@@ -8,34 +10,44 @@
  */
 
 import { useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 export type SortDirection = 'asc' | 'desc'
 
+/** Pushes a mutated copy of the current query string, replacing history. */
+function useUrlParams(): [URLSearchParams, (mutate: (next: URLSearchParams) => void) => void] {
+  const router = useRouter()
+  const pathname = usePathname()
+  const params = useSearchParams()
+
+  const set = (mutate: (next: URLSearchParams) => void) => {
+    const next = new URLSearchParams(params.toString())
+    mutate(next)
+    const query = next.toString()
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false })
+  }
+
+  return [params, set]
+}
+
 /**
  * A single filter value kept in the query string, for controls that sit
- * alongside the search box (status, event picker). Held in the URL for the same
- * reason the rest of the table state is.
+ * alongside the search box (status, event picker).
  */
 export function useUrlParam(
   key: string,
   fallback: string,
 ): [string, (value: string) => void] {
-  const [params, setParams] = useSearchParams()
+  const [params, setParams] = useUrlParams()
   const value = params.get(key) ?? fallback
 
   const set = (next: string) => {
-    setParams(
-      (current) => {
-        const updated = new URLSearchParams(current)
-        if (next === fallback) updated.delete(key)
-        else updated.set(key, next)
-        // Changing a filter invalidates the current page.
-        updated.delete('page')
-        return updated
-      },
-      { replace: true },
-    )
+    setParams((updated) => {
+      if (next === fallback) updated.delete(key)
+      else updated.set(key, next)
+      // Changing a filter invalidates the current page.
+      updated.delete('page')
+    })
   }
 
   return [value, set]
@@ -105,7 +117,7 @@ export function useTableState<T extends { id: string }>(
   const { items, columns, defaultSortKey = '', defaultSortDirection = 'desc' } =
     config
 
-  const [params, setParams] = useSearchParams()
+  const [params, setParams] = useUrlParams()
 
   const urlSearch = params.get('q') ?? ''
   const searchField = params.get('field') ?? ALL_FIELDS
@@ -132,36 +144,17 @@ export function useTableState<T extends { id: string }>(
     if (draftSearch === urlSearch) return
 
     const timer = setTimeout(() => {
-      setParams(
-        (current) => {
-          const next = new URLSearchParams(current)
-          if (draftSearch) next.set('q', draftSearch)
-          else next.delete('q')
-          // A new search invalidates the current page number.
-          next.delete('page')
-          return next
-        },
-        { replace: true },
-      )
+      setParams((next) => {
+        if (draftSearch) next.set('q', draftSearch)
+        else next.delete('q')
+        // A new search invalidates the current page number.
+        next.delete('page')
+      })
     }, SEARCH_DEBOUNCE_MS)
 
     return () => clearTimeout(timer)
-  }, [draftSearch, urlSearch, setParams])
-
-  const update = (
-    mutate: (next: URLSearchParams) => void,
-    { resetPage = true } = {},
-  ) => {
-    setParams(
-      (current) => {
-        const next = new URLSearchParams(current)
-        mutate(next)
-        if (resetPage) next.delete('page')
-        return next
-      },
-      { replace: true },
-    )
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draftSearch, urlSearch])
 
   const searchableColumns = useMemo(
     () => columns.filter((column) => column.value && column.searchable !== false),
@@ -198,7 +191,6 @@ export function useTableState<T extends { id: string }>(
     const accessor = column.value
     const factor = sortDirection === 'asc' ? 1 : -1
 
-    // Copy first: Array.prototype.sort mutates, and `filtered` may be `items`.
     return [...filtered].sort((a, b) => {
       const left = accessor(a)
       const right = accessor(b)
@@ -217,7 +209,6 @@ export function useTableState<T extends { id: string }>(
 
   // Paginate -----------------------------------------------------------------
   const pageCount = Math.max(1, Math.ceil(sorted.length / perPage))
-  // Deleting the last row of the last page would otherwise strand the view.
   const safePage = Math.min(page, pageCount)
   const start = (safePage - 1) * perPage
 
@@ -234,45 +225,46 @@ export function useTableState<T extends { id: string }>(
     setSearch: setDraftSearch,
     searchField,
     setSearchField: (key) =>
-      update((next) => {
+      setParams((next) => {
         if (key === ALL_FIELDS) next.delete('field')
         else next.set('field', key)
+        next.delete('page')
       }),
     searchableColumns,
 
     sortKey,
     sortDirection,
     toggleSort: (key) =>
-      update((next) => {
+      setParams((next) => {
         const direction =
           sortKey === key && sortDirection === 'asc' ? 'desc' : 'asc'
         next.set('sort', key)
         next.set('dir', direction)
+        next.delete('page')
       }),
 
     page: safePage,
     setPage: (value) =>
-      update(
-        (next) => {
-          if (value <= 1) next.delete('page')
-          else next.set('page', String(value))
-        },
-        { resetPage: false },
-      ),
+      setParams((next) => {
+        if (value <= 1) next.delete('page')
+        else next.set('page', String(value))
+      }),
     perPage,
     setPerPage: (value) =>
-      update((next) => {
+      setParams((next) => {
         if (value === DEFAULT_PER_PAGE) next.delete('per')
         else next.set('per', String(value))
+        next.delete('page')
       }),
     pageCount,
     rangeStart: sorted.length === 0 ? 0 : start + 1,
     rangeEnd: Math.min(start + perPage, sorted.length),
 
     clearFilters: () =>
-      update((next) => {
+      setParams((next) => {
         next.delete('q')
         next.delete('field')
+        next.delete('page')
       }),
     hasFilters: Boolean(urlSearch || searchField !== ALL_FIELDS),
   }

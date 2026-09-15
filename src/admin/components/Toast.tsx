@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * Transient confirmations and errors.
  *
@@ -16,7 +18,6 @@ import {
   type ReactNode,
 } from 'react'
 import { Icon } from '@/components/ui/Icon'
-import styles from './Toast.module.css'
 
 type ToastTone = 'success' | 'error' | 'info'
 
@@ -36,6 +37,12 @@ const ToastContext = createContext<ToastApi | null>(null)
 
 const AUTO_DISMISS_MS = 4000
 
+const TONE_CLASSES: Record<ToastTone, string> = {
+  success: 'border-brand-deep bg-brand text-ink',
+  error: 'border-coral bg-coral text-paper',
+  info: 'border-line bg-paper text-ink',
+}
+
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([])
   const nextId = useRef(1)
@@ -51,7 +58,6 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
       setToasts((current) => [...current, { id, tone, message }])
 
-      // Errors are left for the reader to dismiss.
       if (tone !== 'error') {
         setTimeout(() => dismiss(id), AUTO_DISMISS_MS)
       }
@@ -72,13 +78,16 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     <ToastContext.Provider value={api}>
       {children}
 
-      <div className={styles.stack} role="status" aria-live="polite">
+      <div className="fixed inset-x-4 bottom-4 z-[100] flex flex-col items-center gap-2 sm:inset-x-auto sm:right-4" role="status" aria-live="polite">
         {toasts.map((toast) => (
-          <div key={toast.id} className={`${styles.toast} ${styles[toast.tone]}`}>
-            <span className={styles.message}>{toast.message}</span>
+          <div
+            key={toast.id}
+            className={`flex w-full max-w-sm items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-[0.92rem] font-medium shadow-[0_20px_40px_-20px_rgba(36,31,24,0.5)] ${TONE_CLASSES[toast.tone]}`}
+          >
+            <span>{toast.message}</span>
             <button
               type="button"
-              className={styles.dismiss}
+              className="shrink-0 opacity-80 transition-opacity hover:opacity-100"
               onClick={() => dismiss(toast.id)}
             >
               <Icon name="close" size={15} />

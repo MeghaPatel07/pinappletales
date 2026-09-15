@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * The long-form body editor (Jodit).
  *
@@ -6,17 +8,16 @@
  *
  * Images do not use Jodit's own uploader. They are routed through
  * lib/cloudinary's `uploadImage` instead, which means the toolbar button,
- * drag-and-drop and paste all behave the same and all honour whichever upload
- * path is configured. Jodit's base64 fallback is switched off deliberately: a
- * pasted screenshot would otherwise be inlined into the document and stored in
- * Firestore.
+ * drag-and-drop and paste all behave the same and all honour the signed
+ * upload path. Jodit's base64 fallback is switched off deliberately: a
+ * pasted screenshot would otherwise be inlined into the document and stored
+ * in MongoDB.
  */
 
 import { Suspense, lazy, useCallback, useMemo, useRef, useState } from 'react'
 import type { IJodit } from 'jodit/esm/types/jodit'
 import type { JoditEditorProps } from 'jodit-react'
 import { cloudinaryUrl, isCloudinaryConfigured, uploadImage, UploadError } from '@/lib/cloudinary'
-import styles from './RichTextEditor.module.css'
 
 const JoditEditor = lazy(() => import('jodit-react'))
 
@@ -58,23 +59,16 @@ export function RichTextEditor({
     try {
       const uploaded = await uploadImage(file)
       const src = cloudinaryUrl(uploaded, { width: INSERT_WIDTH, crop: 'limit' })
-      editor.s.insertHTML(
-        `<img src="${src}" alt="" loading="lazy" decoding="async" />`,
-      )
+      editor.s.insertHTML(`<img src="${src}" alt="" loading="lazy" decoding="async" />`)
       setStatus('')
     } catch (caught) {
-      setStatus(
-        caught instanceof UploadError ? caught.message : 'Image upload failed.',
-      )
+      setStatus(caught instanceof UploadError ? caught.message : 'Image upload failed.')
     }
   }, [])
 
-  /** Picks images out of a paste or drop and handles them ourselves. */
   const handleDroppedFiles = useCallback(
     (editor: IJodit, files: FileList | null | undefined, event: Event) => {
-      const images = Array.from(files ?? []).filter((file) =>
-        file.type.startsWith('image/'),
-      )
+      const images = Array.from(files ?? []).filter((file) => file.type.startsWith('image/'))
       if (images.length === 0) return undefined
 
       event.preventDefault()
@@ -86,15 +80,11 @@ export function RichTextEditor({
         }
       })()
 
-      // Tells Jodit not to run its own handling for this event.
       return false
     },
     [insertImage],
   )
 
-  // jodit-react destroys and rebuilds the editor whenever `config` changes
-  // identity, which would wipe the caret on every keystroke. Both this and
-  // `attachEditor` below must therefore stay referentially stable.
   const config = useMemo(
     () =>
       ({
@@ -104,34 +94,17 @@ export function RichTextEditor({
         toolbarSticky: true,
         statusbar: true,
         spellcheck: true,
-        // Word and Google Docs paste a wall of inline styles; take the text.
         askBeforePasteHTML: false,
         askBeforePasteFromWord: false,
         defaultActionOnPaste: 'insert_clear_html',
         uploader: { insertImageAsBase64URI: false },
         buttons: [
-          'bold',
-          'italic',
-          'underline',
-          'strikethrough',
-          '|',
-          'paragraph',
-          'brush',
-          '|',
-          'ul',
-          'ol',
-          '|',
-          'link',
-          'cloudinaryImage',
-          'table',
-          '|',
-          'align',
-          'hr',
-          'eraser',
-          '|',
-          'undo',
-          'redo',
-          '|',
+          'bold', 'italic', 'underline', 'strikethrough', '|',
+          'paragraph', 'brush', '|',
+          'ul', 'ol', '|',
+          'link', 'cloudinaryImage', 'table', '|',
+          'align', 'hr', 'eraser', '|',
+          'undo', 'redo', '|',
           'source',
         ],
         extraButtons: [
@@ -158,55 +131,43 @@ export function RichTextEditor({
   const attachEditor = useCallback(
     (editor: IJodit) => {
       editorRef.current = editor
-
-      editor.e.on('paste', (event: ClipboardEvent) =>
-        handleDroppedFiles(editor, event.clipboardData?.files, event),
-      )
-      editor.e.on('drop', (event: DragEvent) =>
-        handleDroppedFiles(editor, event.dataTransfer?.files, event),
-      )
+      editor.e.on('paste', (event: ClipboardEvent) => handleDroppedFiles(editor, event.clipboardData?.files, event))
+      editor.e.on('drop', (event: DragEvent) => handleDroppedFiles(editor, event.dataTransfer?.files, event))
     },
     [handleDroppedFiles],
   )
 
   return (
-    <div className={styles.field}>
-      <div className={styles.labelRow}>
-        <span className={styles.label}>
+    <div className="grid gap-2">
+      <div className="flex items-center justify-between gap-3">
+        <span className="eyebrow text-ink-soft">
           {label}
           {required ? (
-            <span className={styles.required} aria-hidden="true">
+            <span className="ml-1 text-coral" aria-hidden>
               *
             </span>
           ) : (
-            <span className={styles.optional}>optional</span>
+            <span className="ml-1 normal-case tracking-normal text-ink-soft/70">(optional)</span>
           )}
         </span>
-        {status && <span className={styles.status}>{status}</span>}
+        {status && <span className="text-[0.78rem] text-ink-soft">{status}</span>}
       </div>
 
-      <div
-        className={[styles.editor, error ? styles.invalid : ''].filter(Boolean).join(' ')}
-      >
+      <div className={`overflow-hidden rounded-xl border ${error ? 'border-coral' : 'border-line'}`}>
         <Suspense
           fallback={
-            <div className={styles.loading} style={{ height }}>
+            <div className="grid place-items-center bg-paper-2 text-[0.9rem] text-ink-soft" style={{ height }}>
               Loading editor…
             </div>
           }
         >
-          <JoditEditor
-            value={value}
-            config={config}
-            editorRef={attachEditor}
-            onChange={onChange}
-          />
+          <JoditEditor value={value} config={config} editorRef={attachEditor} onChange={onChange} />
         </Suspense>
       </div>
 
-      {hint && !error && <p className={styles.hint}>{hint}</p>}
+      {hint && !error && <p className="text-[0.82rem] text-ink-soft">{hint}</p>}
       {error && (
-        <p className={styles.error} role="alert">
+        <p className="text-[0.82rem] text-coral" role="alert">
           {error}
         </p>
       )}

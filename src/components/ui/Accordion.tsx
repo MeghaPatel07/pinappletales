@@ -1,5 +1,4 @@
 import { Icon } from './Icon'
-import styles from './Accordion.module.css'
 
 export type AccordionItem = {
   question: string
@@ -18,20 +17,20 @@ type AccordionProps = {
  */
 export function Accordion({ items, defaultOpenIndex = 0 }: AccordionProps) {
   return (
-    <div className={styles.accordion}>
+    <div className="flex flex-col gap-3">
       {items.map((item, index) => (
         <details
           key={item.question}
-          className={styles.item}
+          className="group rounded-card border border-line bg-card px-6 py-4 open:pb-5"
           open={index === defaultOpenIndex}
         >
-          <summary className={styles.summary}>
-            <span className={styles.question}>{item.question}</span>
-            <span className={styles.indicator} aria-hidden="true">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-1 font-display text-[1.1rem] font-medium">
+            <span>{item.question}</span>
+            <span className="shrink-0 text-brand-deep transition-transform duration-300 group-open:rotate-45" aria-hidden>
               <Icon name="plus" size={16} />
             </span>
           </summary>
-          <div className={styles.answer}>
+          <div className="mt-3 max-w-[64ch] text-[0.98rem] leading-relaxed text-ink-soft">
             <p>{item.answer}</p>
           </div>
         </details>

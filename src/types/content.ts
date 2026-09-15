@@ -164,13 +164,15 @@ export type AdminUser = {
   createdAt?: string
 }
 
-/** Collection names, in one place so a typo cannot silently query nothing. */
+/**
+ * Resource names, in one place so a typo cannot silently query nothing.
+ * These are the /api/admin/<name> path segments the admin talks to.
+ */
 export const COLLECTIONS = {
   blogs: 'blogs',
   events: 'events',
   podcasts: 'podcasts',
   testimonials: 'testimonials',
-  eventForms: 'eventForms',
-  eventRegistrations: 'eventRegistrations',
-  admins: 'admins',
+  eventForms: 'event-forms',
+  eventRegistrations: 'registrations',
 } as const

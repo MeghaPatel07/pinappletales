@@ -1,28 +1,20 @@
 /**
- * Creates an admin account.
+ * Creates an admin account in MongoDB.
  *
  *   npm run seed:admin
  *   npm run seed:admin -- someone@example.com theirpassword "Their Name"
  *
- * Two things are needed for admin access, and this script does both:
- *
- *   1. a Firebase Auth user — who you are
- *   2. a document at admins/{uid} — permission to act
- *
- * Both are enforced by firestore.rules, so a user without the document can sign
- * in and still do nothing.
- *
- * Uses the public REST APIs with the web API key rather than the Admin SDK, so
- * it needs no service-account file. That has one consequence: writing to the
- * admins collection is blocked for clients by the rules (deliberately), so the
- * script prints the exact document to add if it cannot write it itself. Run it
- * once with rules temporarily allowing the write, or add the document from the
- * Firebase console — the script tells you which applies.
+ * Defines its own minimal copy of the AdminUser schema rather than importing
+ * src/lib/models/AdminUser.ts, since this plain Node script has no
+ * TypeScript loader — the two are kept in sync by hand (email, passwordHash,
+ * name, timestamps).
  */
 
 import { readFile } from 'node:fs/promises'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import mongoose from 'mongoose'
+import bcrypt from 'bcryptjs'
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 
@@ -67,123 +59,62 @@ const fail = (message) => {
   process.exit(1)
 }
 
+const AdminUserSchema = new mongoose.Schema(
+  {
+    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+    passwordHash: { type: String, required: true },
+    name: { type: String, required: true, default: 'Admin' },
+  },
+  { timestamps: true },
+)
+
 async function main() {
   const env = await loadEnv()
+  const uri = env.MONGODB_URI ?? process.env.MONGODB_URI
 
-  const apiKey = env.VITE_FIREBASE_API_KEY
-  const projectId = env.VITE_FIREBASE_PROJECT_ID ?? 'pineappletales'
-
-  if (!apiKey) {
-    fail(
-      'VITE_FIREBASE_API_KEY is not set in .env.\n' +
-        '  Get it from the Firebase console: Project settings → General →\n' +
-        '  Your apps → Web app → SDK setup and configuration.',
-    )
+  if (!uri) {
+    fail('MONGODB_URI is not set in .env. Add your MongoDB connection string first.')
   }
 
   const [email = DEFAULT_EMAIL, password = DEFAULT_PASSWORD, name = DEFAULT_NAME] =
     process.argv.slice(2)
 
-  if (password.length < 6) {
-    fail('Firebase requires a password of at least 6 characters.')
+  if (password.length < 1) {
+    fail('A password is required.')
+  }
+  if (password.length < 8) {
+    console.warn(
+      `\n  ⚠  That password is only ${password.length} characters — weak for an admin\n` +
+        '     account with access to real visitor data. Consider changing it later\n' +
+        '     (Firebase-inherited 6-char minimum has been removed, not a recommendation).',
+    )
   }
 
-  console.log(`\n  Project   ${projectId}`)
-  console.log(`  Email     ${email}`)
+  console.log(`\n  Connecting to MongoDB…`)
+  await mongoose.connect(uri)
 
-  // 1. The auth user ---------------------------------------------------------
-  const identity = 'https://identitytoolkit.googleapis.com/v1/accounts'
+  const AdminUser = mongoose.models.AdminUser ?? mongoose.model('AdminUser', AdminUserSchema)
 
-  let uid = ''
-  let idToken = ''
+  const normalisedEmail = email.trim().toLowerCase()
+  const passwordHash = await bcrypt.hash(password, 10)
 
-  const signUp = await fetch(`${identity}:signUp?key=${apiKey}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password, returnSecureToken: true }),
-  })
+  const existing = await AdminUser.findOne({ email: normalisedEmail })
 
-  const signUpPayload = await signUp.json()
-
-  if (signUp.ok) {
-    uid = signUpPayload.localId
-    idToken = signUpPayload.idToken
-    console.log('  Auth user created.')
-  } else if (signUpPayload?.error?.message === 'EMAIL_EXISTS') {
-    // Already created on a previous run — sign in instead so we still get a uid.
-    const signIn = await fetch(`${identity}:signInWithPassword?key=${apiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, returnSecureToken: true }),
-    })
-
-    const signInPayload = await signIn.json()
-
-    if (!signIn.ok) {
-      fail(
-        `That email already has an account, but the password given does not match it.\n` +
-          `  Firebase said: ${signInPayload?.error?.message ?? signIn.status}\n` +
-          `  Either pass the correct password, or reset it in the Firebase console.`,
-      )
-    }
-
-    uid = signInPayload.localId
-    idToken = signInPayload.idToken
-    console.log('  Auth user already existed — signed in to read its uid.')
+  if (existing) {
+    existing.passwordHash = passwordHash
+    existing.name = name
+    await existing.save()
+    console.log(`\n  Updated existing admin.`)
   } else {
-    const reason = signUpPayload?.error?.message ?? String(signUp.status)
-
-    if (reason === 'OPERATION_NOT_ALLOWED') {
-      fail(
-        'Email/password sign-in is switched off for this project.\n' +
-          '  Firebase console → Authentication → Sign-in method → enable Email/Password.',
-      )
-    }
-
-    fail(`Could not create the auth user. Firebase said: ${reason}`)
+    await AdminUser.create({ email: normalisedEmail, passwordHash, name })
+    console.log(`\n  Created admin.`)
   }
 
-  console.log(`  UID       ${uid}`)
+  console.log(`  Email     ${normalisedEmail}`)
+  console.log(`  Name      ${name}`)
+  console.log(`\n  Done. Sign in at /admin/login with those credentials.\n`)
 
-  // 2. The admins document ---------------------------------------------------
-  const documentUrl =
-    `https://firestore.googleapis.com/v1/projects/${projectId}` +
-    `/databases/(default)/documents/admins/${uid}?key=${apiKey}`
-
-  const body = {
-    fields: {
-      email: { stringValue: email },
-      name: { stringValue: name },
-      createdAt: { stringValue: new Date().toISOString() },
-    },
-  }
-
-  const write = await fetch(documentUrl, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${idToken}`,
-    },
-    body: JSON.stringify(body),
-  })
-
-  if (write.ok) {
-    console.log('  Admin document written.\n')
-    console.log('  Done. Sign in at /admin/login with those credentials.\n')
-    return
-  }
-
-  // Expected when the rules are already deployed: admins is not client-writable.
-  console.log('\n  The admins document could not be written from here.')
-  console.log('  This is expected — firestore.rules blocks client writes to')
-  console.log('  the admins collection on purpose.\n')
-  console.log('  Add it manually in the Firebase console:\n')
-  console.log('    Firestore Database → Start collection → "admins"')
-  console.log(`    Document ID:  ${uid}`)
-  console.log(`    email  (string)      ${email}`)
-  console.log(`    name   (string)      ${name}`)
-  console.log(`    createdAt (string)   ${new Date().toISOString()}\n`)
-  console.log('  Then sign in at /admin/login.\n')
+  await mongoose.disconnect()
 }
 
 main().catch((error) => {

@@ -1,9 +1,12 @@
+'use client'
+
 import { useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Icon } from '@/components/ui/Icon'
 import { cloudinaryUrl } from '@/lib/cloudinary'
 import { formatDateShort, isUpcoming } from '@/lib/date'
-import { toEventItem } from '@/content/mappers'
+import { toEventItem } from '@/lib/mappers'
 import { COLLECTIONS, type EventItem } from '@/types/content'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
 import { DataTable, type Column } from '../../components/DataTable'
@@ -12,11 +15,11 @@ import { EmptyState, FeaturedBadge, PageHeader, StatusBadge } from '../../compon
 import { useToast } from '../../components/Toast'
 import { useCollection } from '../../hooks/useCollection'
 import { useTableState, useUrlParam } from '../../hooks/useTableState'
-import { deleteRecord, describeFirestoreError } from '../../lib/crud'
+import { deleteRecord, describeApiError } from '../../lib/crud'
 import styles from '../shared.module.css'
 
 export function EventList() {
-  const navigate = useNavigate()
+  const router = useRouter()
   const toast = useToast()
   const { items, loading, error, truncated, refresh, removeLocal } =
     useCollection<EventItem>(COLLECTIONS.events, toEventItem, {
@@ -70,7 +73,7 @@ export function EventList() {
         value: (event) => event.name,
         render: (event) => (
           <div className={styles.primaryCell}>
-            <Link to={`/admin/events/${event.id}`} className={styles.cellLink}>
+            <Link href={`/admin/events/${event.id}`} className={styles.cellLink}>
               {event.name || 'Untitled event'}
             </Link>
             <span className={styles.cellSub}>/events/{event.slug}</span>
@@ -139,7 +142,7 @@ export function EventList() {
       toast.success(`“${pendingDelete.name}” was deleted.`)
       setPendingDelete(null)
     } catch (caught) {
-      toast.error(describeFirestoreError(caught))
+      toast.error(describeApiError(caught))
     } finally {
       setDeleting(false)
     }
@@ -151,7 +154,7 @@ export function EventList() {
         title="Events"
         description="Workshops and sessions listed at /events. Each event can have its own registration form."
         actions={
-          <AdminButton onClick={() => navigate('/admin/events/new')}>
+          <AdminButton onClick={() => router.push('/admin/events/new')}>
             <Icon name="plus" size={16} />
             New event
           </AdminButton>
@@ -184,7 +187,7 @@ export function EventList() {
             title="No events yet"
             message="Add a workshop or session and it will appear on the events page."
             action={
-              <AdminButton onClick={() => navigate('/admin/events/new')}>
+              <AdminButton onClick={() => router.push('/admin/events/new')}>
                 Add the first event
               </AdminButton>
             }
@@ -193,14 +196,14 @@ export function EventList() {
         actions={(event) => (
           <>
             <Link
-              to={`/admin/event-forms/${event.id}`}
+              href={`/admin/event-forms/${event.id}`}
               className={styles.textAction}
               title={`Registration form for ${event.name}`}
             >
               Form
             </Link>
             <Link
-              to={`/admin/events/${event.id}`}
+              href={`/admin/events/${event.id}`}
               className={styles.iconAction}
               title="Edit"
             >

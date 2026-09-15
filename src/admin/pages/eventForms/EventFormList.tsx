@@ -1,8 +1,10 @@
+'use client'
+
 import { useCallback, useMemo } from 'react'
-import { Link } from 'react-router-dom'
+import Link from 'next/link'
 import { formatDateShort, isUpcoming } from '@/lib/date'
-import { toEventForm, toEventItem } from '@/content/mappers'
-import type { RawDocument } from '@/lib/firestore/rest'
+import { toEventForm, toEventItem } from '@/lib/mappers'
+import type { RawDocument } from '@/lib/apiTypes'
 import { COLLECTIONS, type EventForm, type EventItem } from '@/types/content'
 import { DataTable, type Column } from '../../components/DataTable'
 import { EmptyState, PageHeader } from '../../components/PageHeader'
@@ -57,7 +59,7 @@ export function EventFormList() {
         value: (row) => row.name,
         render: (row) => (
           <div className={styles.primaryCell}>
-            <Link to={`/admin/event-forms/${row.id}`} className={styles.cellLink}>
+            <Link href={`/admin/event-forms/${row.id}`} className={styles.cellLink}>
               {row.name || 'Untitled event'}
             </Link>
             <span className={styles.cellSub}>
@@ -152,7 +154,7 @@ export function EventFormList() {
           />
         }
         actions={(row) => (
-          <Link to={`/admin/event-forms/${row.id}`} className={styles.textAction}>
+          <Link href={`/admin/event-forms/${row.id}`} className={styles.textAction}>
             {row.form ? 'Edit form' : 'Build form'}
           </Link>
         )}

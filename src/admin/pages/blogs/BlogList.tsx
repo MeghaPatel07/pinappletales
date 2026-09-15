@@ -1,8 +1,11 @@
+'use client'
+
 import { useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Icon } from '@/components/ui/Icon'
 import { formatDateShort } from '@/lib/date'
-import { toBlogPost } from '@/content/mappers'
+import { toBlogPost } from '@/lib/mappers'
 import { COLLECTIONS, type BlogPost } from '@/types/content'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
 import { DataTable, type Column } from '../../components/DataTable'
@@ -16,11 +19,11 @@ import {
 import { useToast } from '../../components/Toast'
 import { useCollection } from '../../hooks/useCollection'
 import { useTableState, useUrlParam } from '../../hooks/useTableState'
-import { deleteRecord, describeFirestoreError } from '../../lib/crud'
+import { deleteRecord, describeApiError } from '../../lib/crud'
 import styles from '../shared.module.css'
 
 export function BlogList() {
-  const navigate = useNavigate()
+  const router = useRouter()
   const toast = useToast()
   const { items, loading, error, truncated, refresh, removeLocal } =
     useCollection<BlogPost>(COLLECTIONS.blogs, toBlogPost, {
@@ -47,7 +50,7 @@ export function BlogList() {
         value: (post) => post.title,
         render: (post) => (
           <div className={styles.primaryCell}>
-            <Link to={`/admin/blogs/${post.id}`} className={styles.cellLink}>
+            <Link href={`/admin/blogs/${post.id}`} className={styles.cellLink}>
               {post.title || 'Untitled'}
             </Link>
             <span className={styles.cellSub}>/blog/{post.slug}</span>
@@ -111,7 +114,7 @@ export function BlogList() {
       toast.success(`“${pendingDelete.title}” was deleted.`)
       setPendingDelete(null)
     } catch (caught) {
-      toast.error(describeFirestoreError(caught))
+      toast.error(describeApiError(caught))
     } finally {
       setDeleting(false)
     }
@@ -123,7 +126,7 @@ export function BlogList() {
         title="Blogs"
         description="Articles published at /blog. Drafts stay hidden from the website until they are published."
         actions={
-          <AdminButton onClick={() => navigate('/admin/blogs/new')}>
+          <AdminButton onClick={() => router.push('/admin/blogs/new')}>
             <Icon name="plus" size={16} />
             New post
           </AdminButton>
@@ -156,7 +159,7 @@ export function BlogList() {
             title="No posts yet"
             message="Write your first article and it will appear on the blog page."
             action={
-              <AdminButton onClick={() => navigate('/admin/blogs/new')}>
+              <AdminButton onClick={() => router.push('/admin/blogs/new')}>
                 Write the first post
               </AdminButton>
             }
@@ -165,7 +168,7 @@ export function BlogList() {
         actions={(post) => (
           <>
             <Link
-              to={`/admin/blogs/${post.id}`}
+              href={`/admin/blogs/${post.id}`}
               className={styles.iconAction}
               title="Edit"
             >

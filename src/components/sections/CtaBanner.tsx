@@ -1,7 +1,6 @@
-import { Button } from '@/components/ui/Button'
-import { Container } from '@/components/ui/Container'
 import { Icon } from '@/components/ui/Icon'
-import styles from './CtaBanner.module.css'
+import { Container } from '@/components/ui/Container'
+import { Button } from '@/components/ui/Button'
 
 type CtaBannerProps = {
   eyebrow?: string
@@ -20,24 +19,30 @@ export function CtaBanner({
   primaryTo = '/contact',
   variant = 'yellow',
 }: CtaBannerProps) {
-  return (
-    <section className={`${styles.banner} ${styles[variant]}`}>
-      <Container>
-        <div className={styles.inner}>
-          <div className={styles.copy}>
-            {eyebrow && <p className={styles.eyebrow}>{eyebrow}</p>}
-            <h2 className={styles.title}>{title}</h2>
-            {body && <p className={styles.body}>{body}</p>}
-          </div>
+  const isYellow = variant === 'yellow'
 
-          {primaryLabel && (
-            <div className={styles.actions}>
-              <Button to={primaryTo} variant={variant === 'yellow' ? 'dark' : 'primary'} size="lg">
-                {primaryLabel}
+  return (
+    <section className={isYellow ? 'bg-brand text-ink' : 'bg-ink text-paper'}>
+      <Container>
+        <div className="reveal flex flex-col items-center gap-5 py-16 text-center md:py-20">
+          {eyebrow ? <span className="eyebrow">{eyebrow}</span> : null}
+          <h2
+            className="font-display max-w-[26ch] font-medium leading-[1.1] tracking-[-0.01em]"
+            style={{ fontSize: 'clamp(1.8rem, 3.6vw, 2.8rem)' }}
+          >
+            {title}
+          </h2>
+          {body ? (
+            <p className={`max-w-[46ch] text-[1.02rem] ${isYellow ? 'text-ink/75' : 'text-paper/80'}`}>{body}</p>
+          ) : null}
+          {primaryLabel ? (
+            <Button to={primaryTo} variant={isYellow ? 'dark' : 'primary'} size="lg">
+              {primaryLabel}
+              <span className="arrow" aria-hidden>
                 <Icon name="arrowRight" size={17} />
-              </Button>
-            </div>
-          )}
+              </span>
+            </Button>
+          ) : null}
         </div>
       </Container>
     </section>

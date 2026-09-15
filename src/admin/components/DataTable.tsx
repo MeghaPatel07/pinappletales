@@ -1,3 +1,5 @@
+'use client'
+
 import type { ReactNode } from 'react'
 import { Icon } from '@/components/ui/Icon'
 import {
@@ -7,7 +9,6 @@ import {
   type TableState,
 } from '../hooks/useTableState'
 import { Spinner } from './Spinner'
-import styles from './DataTable.module.css'
 
 export type Column<T> = TableColumn<T> & {
   /** Cell contents. Falls back to the plain `value` when omitted. */
@@ -35,6 +36,12 @@ type DataTableProps<T extends { id: string }> = {
   onRetry?: () => void
 }
 
+const ALIGN_CLASSES: Record<'left' | 'center' | 'right', string> = {
+  left: 'text-left',
+  center: 'text-center',
+  right: 'text-right',
+}
+
 export function DataTable<T extends { id: string }>({
   table,
   columns,
@@ -51,24 +58,18 @@ export function DataTable<T extends { id: string }>({
 
   const sortIcon = (key: string) => {
     if (table.sortKey !== key) return null
-    return (
-      <Icon
-        name={table.sortDirection === 'asc' ? 'chevronUp' : 'chevronDown'}
-        size={14}
-        className={styles.sortIcon}
-      />
-    )
+    return <Icon name={table.sortDirection === 'asc' ? 'chevronUp' : 'chevronDown'} size={14} className="ml-1 inline text-brand-deep" />
   }
 
   return (
-    <div className={styles.wrap}>
-      <div className={styles.toolbar}>
-        <div className={styles.searchGroup}>
-          <div className={styles.searchBox}>
-            <Icon name="search" size={16} className={styles.searchIcon} />
+    <div>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <div className="relative">
+            <Icon name="search" size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft" />
             <input
               type="search"
-              className={styles.searchInput}
+              className="w-56 rounded-full border border-line bg-paper py-2 pl-9 pr-3.5 text-[0.9rem] text-ink placeholder:text-ink-soft/70 focus:outline-none focus:ring-2 focus:ring-brand-deep/40"
               placeholder={searchPlaceholder}
               value={table.search}
               onChange={(event) => table.setSearch(event.target.value)}
@@ -77,12 +78,12 @@ export function DataTable<T extends { id: string }>({
           </div>
 
           {table.searchableColumns.length > 1 && (
-            <label className={styles.fieldSelect}>
+            <label>
               <span className="visually-hidden">Search in field</span>
               <select
                 value={table.searchField}
                 onChange={(event) => table.setSearchField(event.target.value)}
-                className={styles.select}
+                className="cursor-pointer rounded-full border border-line bg-paper px-3 py-2 text-[0.85rem] text-ink"
               >
                 <option value={ALL_FIELDS}>All fields</option>
                 {table.searchableColumns.map((column) => (
@@ -97,59 +98,37 @@ export function DataTable<T extends { id: string }>({
           {filters}
 
           {table.hasFilters && (
-            <button
-              type="button"
-              className={styles.clear}
-              onClick={table.clearFilters}
-            >
+            <button type="button" className="text-[0.85rem] font-medium text-ink-soft hover:text-ink" onClick={table.clearFilters}>
               Clear
             </button>
           )}
         </div>
 
-        <p className={styles.count} role="status">
-          {loading
-            ? 'Loading…'
-            : `${table.matchCount} ${table.matchCount === 1 ? 'record' : 'records'}`}
+        <p className="text-[0.85rem] text-ink-soft" role="status">
+          {loading ? 'Loading…' : `${table.matchCount} ${table.matchCount === 1 ? 'record' : 'records'}`}
         </p>
       </div>
 
       {truncated && (
-        <p className={styles.notice}>
+        <p className="mb-3 rounded-lg bg-paper-2 px-3.5 py-2 text-[0.82rem] text-ink-soft">
           Showing the most recent 500 records. Older entries are not loaded.
         </p>
       )}
 
-      <div className={styles.tableScroll}>
-        <table className={styles.table}>
+      <div className="overflow-x-auto rounded-card border border-line bg-paper">
+        <table className="w-full border-collapse text-[0.92rem]">
           <thead>
-            <tr>
+            <tr className="border-b border-line bg-paper-2">
               {columns.map((column) => (
                 <th
                   key={column.key}
                   scope="col"
                   style={column.width ? { width: column.width } : undefined}
-                  className={[
-                    column.align === 'right' ? styles.right : '',
-                    column.align === 'center' ? styles.center : '',
-                    column.secondary ? styles.secondary : '',
-                  ]
-                    .filter(Boolean)
-                    .join(' ')}
-                  aria-sort={
-                    table.sortKey === column.key
-                      ? table.sortDirection === 'asc'
-                        ? 'ascending'
-                        : 'descending'
-                      : undefined
-                  }
+                  className={`px-4 py-3 font-medium text-ink-soft ${ALIGN_CLASSES[column.align ?? 'left']} ${column.secondary ? 'hidden md:table-cell' : ''}`}
+                  aria-sort={table.sortKey === column.key ? (table.sortDirection === 'asc' ? 'ascending' : 'descending') : undefined}
                 >
                   {column.sortable !== false && column.value ? (
-                    <button
-                      type="button"
-                      className={styles.sortButton}
-                      onClick={() => table.toggleSort(column.key)}
-                    >
+                    <button type="button" className="inline-flex items-center hover:text-ink" onClick={() => table.toggleSort(column.key)}>
                       {column.header}
                       {sortIcon(column.key)}
                     </button>
@@ -159,7 +138,7 @@ export function DataTable<T extends { id: string }>({
                 </th>
               ))}
               {actions && (
-                <th scope="col" className={styles.right}>
+                <th scope="col" className="px-4 py-3 text-right">
                   <span className="visually-hidden">Actions</span>
                 </th>
               )}
@@ -169,7 +148,7 @@ export function DataTable<T extends { id: string }>({
           <tbody>
             {loading && (
               <tr>
-                <td colSpan={columnCount} className={styles.stateCell}>
+                <td colSpan={columnCount} className="px-4 py-14 text-center">
                   <Spinner label="Loading records…" full />
                 </td>
               </tr>
@@ -177,10 +156,10 @@ export function DataTable<T extends { id: string }>({
 
             {!loading && error && (
               <tr>
-                <td colSpan={columnCount} className={styles.stateCell}>
-                  <p className={styles.error}>{error}</p>
+                <td colSpan={columnCount} className="px-4 py-14 text-center">
+                  <p className="text-[0.92rem] text-coral">{error}</p>
                   {onRetry && (
-                    <button type="button" className={styles.retry} onClick={onRetry}>
+                    <button type="button" className="mt-2 text-[0.85rem] font-medium text-ink underline" onClick={onRetry}>
                       Try again
                     </button>
                   )}
@@ -190,15 +169,11 @@ export function DataTable<T extends { id: string }>({
 
             {!loading && !error && table.rows.length === 0 && (
               <tr>
-                <td colSpan={columnCount} className={styles.stateCell}>
+                <td colSpan={columnCount} className="px-4 py-14 text-center">
                   {table.hasFilters ? (
-                    <p className={styles.empty}>
+                    <p className="text-[0.92rem] text-ink-soft">
                       Nothing matches that search.{' '}
-                      <button
-                        type="button"
-                        className={styles.linkButton}
-                        onClick={table.clearFilters}
-                      >
+                      <button type="button" className="font-medium text-ink underline" onClick={table.clearFilters}>
                         Clear the filters
                       </button>
                     </p>
@@ -212,26 +187,18 @@ export function DataTable<T extends { id: string }>({
             {!loading &&
               !error &&
               table.rows.map((item) => (
-                <tr key={item.id}>
+                <tr key={item.id} className="border-b border-line last:border-b-0 hover:bg-paper-2/60">
                   {columns.map((column) => (
                     <td
                       key={column.key}
-                      className={[
-                        column.align === 'right' ? styles.right : '',
-                        column.align === 'center' ? styles.center : '',
-                        column.secondary ? styles.secondary : '',
-                      ]
-                        .filter(Boolean)
-                        .join(' ')}
+                      className={`px-4 py-3 align-top ${ALIGN_CLASSES[column.align ?? 'left']} ${column.secondary ? 'hidden md:table-cell' : ''}`}
                     >
-                      {column.render
-                        ? column.render(item)
-                        : String(column.value?.(item) ?? '')}
+                      {column.render ? column.render(item) : String(column.value?.(item) ?? '')}
                     </td>
                   ))}
                   {actions && (
-                    <td className={styles.right}>
-                      <div className={styles.actions}>{actions(item)}</div>
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex items-center justify-end gap-1.5">{actions(item)}</div>
                     </td>
                   )}
                 </tr>
@@ -241,16 +208,16 @@ export function DataTable<T extends { id: string }>({
       </div>
 
       {!loading && !error && table.matchCount > 0 && (
-        <div className={styles.footer}>
-          <p className={styles.range}>
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-[0.85rem] text-ink-soft">
             Showing {table.rangeStart}–{table.rangeEnd} of {table.matchCount}
           </p>
 
-          <div className={styles.footerControls}>
-            <label className={styles.perPage}>
+          <div className="flex items-center gap-4">
+            <label className="flex items-center gap-2 text-[0.85rem] text-ink-soft">
               <span>Per page</span>
               <select
-                className={styles.select}
+                className="cursor-pointer rounded-full border border-line bg-paper px-2.5 py-1.5 text-[0.85rem] text-ink"
                 value={table.perPage}
                 onChange={(event) => table.setPerPage(Number(event.target.value))}
               >
@@ -262,11 +229,7 @@ export function DataTable<T extends { id: string }>({
               </select>
             </label>
 
-            <Pagination
-              page={table.page}
-              pageCount={table.pageCount}
-              onChange={table.setPage}
-            />
+            <Pagination page={table.page} pageCount={table.pageCount} onChange={table.setPage} />
           </div>
         </div>
       )}
@@ -274,10 +237,6 @@ export function DataTable<T extends { id: string }>({
   )
 }
 
-/**
- * Page numbers with ellipses: first, last, and a window around the current
- * page, so the control stays a fixed width however many pages there are.
- */
 function pageItems(page: number, pageCount: number): (number | 'gap')[] {
   if (pageCount <= 7) {
     return Array.from({ length: pageCount }, (_, index) => index + 1)
@@ -305,10 +264,10 @@ export function Pagination({ page, pageCount, onChange }: PaginationProps) {
   if (pageCount <= 1) return null
 
   return (
-    <nav className={styles.pagination} aria-label="Pagination">
+    <nav className="flex items-center gap-1" aria-label="Pagination">
       <button
         type="button"
-        className={styles.pageButton}
+        className="grid h-8 w-8 place-items-center rounded-full text-ink-soft hover:bg-paper-2 disabled:opacity-30"
         onClick={() => onChange(page - 1)}
         disabled={page <= 1}
       >
@@ -318,16 +277,16 @@ export function Pagination({ page, pageCount, onChange }: PaginationProps) {
 
       {pageItems(page, pageCount).map((item, index) =>
         item === 'gap' ? (
-          <span key={`gap-${index}`} className={styles.gap} aria-hidden="true">
+          <span key={`gap-${index}`} className="px-1 text-ink-soft" aria-hidden>
             …
           </span>
         ) : (
           <button
             key={item}
             type="button"
-            className={[styles.pageButton, item === page ? styles.pageCurrent : '']
-              .filter(Boolean)
-              .join(' ')}
+            className={`grid h-8 w-8 place-items-center rounded-full text-[0.85rem] ${
+              item === page ? 'bg-brand font-semibold text-ink' : 'text-ink-soft hover:bg-paper-2'
+            }`}
             onClick={() => onChange(item)}
             aria-current={item === page ? 'page' : undefined}
           >
@@ -338,7 +297,7 @@ export function Pagination({ page, pageCount, onChange }: PaginationProps) {
 
       <button
         type="button"
-        className={styles.pageButton}
+        className="grid h-8 w-8 place-items-center rounded-full text-ink-soft hover:bg-paper-2 disabled:opacity-30"
         onClick={() => onChange(page + 1)}
         disabled={page >= pageCount}
       >

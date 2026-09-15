@@ -1,7 +1,9 @@
+'use client'
+
 import { useCallback, useMemo, useState } from 'react'
 import { Icon } from '@/components/ui/Icon'
 import { formatDateTime } from '@/lib/date'
-import { toEventItem, toEventRegistration } from '@/content/mappers'
+import { toEventItem, toEventRegistration } from '@/lib/mappers'
 import {
   COLLECTIONS,
   type EventItem,
@@ -14,7 +16,7 @@ import { EmptyState, PageHeader } from '../../components/PageHeader'
 import { useToast } from '../../components/Toast'
 import { useCollection } from '../../hooks/useCollection'
 import { useTableState, useUrlParam } from '../../hooks/useTableState'
-import { deleteRecord, describeFirestoreError } from '../../lib/crud'
+import { deleteRecord, describeApiError } from '../../lib/crud'
 import styles from '../shared.module.css'
 
 /** Answers are keyed by the field names the form builder assigned. */
@@ -172,7 +174,7 @@ export function RegistrationList() {
       toast.success('Registration deleted.')
       setPendingDelete(null)
     } catch (caught) {
-      toast.error(describeFirestoreError(caught))
+      toast.error(describeApiError(caught))
     } finally {
       setDeleting(false)
     }

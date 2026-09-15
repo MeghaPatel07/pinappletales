@@ -1,10 +1,11 @@
+'use client'
+
 import { useCallback, useMemo } from 'react'
-import { Link } from 'react-router-dom'
+import Link from 'next/link'
 import { isCloudinaryConfigured } from '@/lib/cloudinary'
-import { isFirebaseConfigured } from '@/lib/firebase/client'
 import { isUpcoming } from '@/lib/date'
-import { toBlogPost, toEventItem, toEventRegistration, toPodcast } from '@/content/mappers'
-import type { RawDocument } from '@/lib/firestore/rest'
+import { toBlogPost, toEventItem, toEventRegistration, toPodcast } from '@/lib/mappers'
+import type { RawDocument } from '@/lib/apiTypes'
 import {
   COLLECTIONS,
   type BlogPost,
@@ -83,10 +84,8 @@ export function Dashboard() {
   }, [blogs.items, events.items, podcasts.items, registrations.items])
 
   const setupIssues = [
-    !isFirebaseConfigured &&
-      'Firebase: add VITE_FIREBASE_API_KEY and VITE_FIREBASE_APP_ID to .env.',
     !isCloudinaryConfigured() &&
-      'Cloudinary: add VITE_CLOUDINARY_CLOUD_NAME and VITE_CLOUDINARY_UPLOAD_PRESET to .env, or set VITE_CLOUDINARY_SIGNATURE_URL for signed uploads.',
+      'Cloudinary: add NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET to .env.',
   ].filter((issue): issue is string => Boolean(issue))
 
   const recentPosts = blogs.items.slice(0, 5)
@@ -114,7 +113,7 @@ export function Dashboard() {
 
       <div className={styles.statGrid}>
         {stats.map((stat) => (
-          <Link key={stat.to} to={stat.to} className={styles.statCard}>
+          <Link key={stat.to} href={stat.to} className={styles.statCard}>
             <span className={styles.statValue}>{stat.value}</span>
             <span className={styles.statLabel}>{stat.label}</span>
             <span className={styles.statMeta}>{stat.meta}</span>
@@ -129,7 +128,7 @@ export function Dashboard() {
             {recentPosts.map((post) => (
               <Link
                 key={post.id}
-                to={`/admin/blogs/${post.id}`}
+                href={`/admin/blogs/${post.id}`}
                 className={styles.statCard}
               >
                 <span className={styles.statLabel}>{post.title || 'Untitled'}</span>

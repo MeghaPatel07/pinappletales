@@ -1,5 +1,0 @@
-# Netlify-style routing.
-# Prerendered files are matched first (/, /about, /services, /contact), so this
-# rule only catches genuinely unknown paths — those get the real 404 document
-# with a 404 status rather than a soft-404 copy of the home page.
-/*  /404.html  404

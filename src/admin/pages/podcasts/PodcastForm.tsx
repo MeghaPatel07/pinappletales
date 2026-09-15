@@ -1,7 +1,9 @@
+'use client'
+
 import { useCallback, useState, type FormEvent } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useParams, useRouter } from 'next/navigation'
 import { Icon } from '@/components/ui/Icon'
-import { toPodcast } from '@/content/mappers'
+import { toPodcast } from '@/lib/mappers'
 import { today } from '@/lib/date'
 import { isValidSlug, slugify } from '@/lib/slug'
 import { youtubeId, youtubeThumbnail } from '@/lib/youtube'
@@ -47,7 +49,7 @@ type Errors = Partial<Record<'name' | 'slug' | 'youtubeLink' | 'date', string>>
 
 export function PodcastForm() {
   const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
+  const router = useRouter()
   const toast = useToast()
 
   const [fields, setFields] = useState<Fields>(BLANK)
@@ -127,7 +129,7 @@ export function PodcastForm() {
     })
 
     if (savedId && isNew) {
-      navigate(`/admin/podcasts/${savedId}`, { replace: true })
+      router.replace(`/admin/podcasts/${savedId}`)
       setSlugLocked(true)
     }
   }
@@ -256,7 +258,7 @@ export function PodcastForm() {
         <AdminButton type="submit" disabled={editor.saving}>
           {editor.saving ? 'Saving…' : isNew ? 'Create episode' : 'Save changes'}
         </AdminButton>
-        <AdminButton variant="secondary" onClick={() => navigate('/admin/podcasts')}>
+        <AdminButton variant="secondary" onClick={() => router.push('/admin/podcasts')}>
           Cancel
         </AdminButton>
 

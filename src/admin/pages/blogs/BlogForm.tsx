@@ -1,8 +1,10 @@
+'use client'
+
 import { useCallback, useState, type FormEvent } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useParams, useRouter } from 'next/navigation'
 import { Icon } from '@/components/ui/Icon'
 import { SITE_URL } from '@/config/site'
-import { toBlogPost } from '@/content/mappers'
+import { toBlogPost } from '@/lib/mappers'
 import { readingTime } from '@/lib/html'
 import { isValidSlug, slugify } from '@/lib/slug'
 import { today } from '@/lib/date'
@@ -59,7 +61,7 @@ type Errors = Partial<Record<'title' | 'slug' | 'date' | 'description' | 'author
 
 export function BlogForm() {
   const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
+  const router = useRouter()
   const toast = useToast()
 
   const [fields, setFields] = useState<Fields>(BLANK)
@@ -164,7 +166,7 @@ export function BlogForm() {
 
     if (savedId && isNew) {
       // Move off /new so a reload does not create a second copy.
-      navigate(`/admin/blogs/${savedId}`, { replace: true })
+      router.replace(`/admin/blogs/${savedId}`)
       setSlugLocked(true)
     }
   }
@@ -334,7 +336,7 @@ export function BlogForm() {
         <AdminButton type="submit" disabled={editor.saving}>
           {editor.saving ? 'Saving…' : isNew ? 'Create post' : 'Save changes'}
         </AdminButton>
-        <AdminButton variant="secondary" onClick={() => navigate('/admin/blogs')}>
+        <AdminButton variant="secondary" onClick={() => router.push('/admin/blogs')}>
           Cancel
         </AdminButton>
 

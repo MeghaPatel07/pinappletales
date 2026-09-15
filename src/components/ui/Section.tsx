@@ -1,9 +1,8 @@
 import type { ReactNode } from 'react'
-import styles from './Section.module.css'
 
 type SectionProps = {
   children: ReactNode
-  /** Background treatment. `dark` is the espresso editorial band. */
+  /** Background treatment. `dark` is the ink editorial band. */
   tone?: 'canvas' | 'surface' | 'alt' | 'sunk' | 'dark'
   size?: 'default' | 'compact'
   id?: string
@@ -11,6 +10,14 @@ type SectionProps = {
   /** Draws a hairline rule above the section. */
   divider?: boolean
   'aria-labelledby'?: string
+}
+
+const TONE_CLASSES: Record<NonNullable<SectionProps['tone']>, string> = {
+  canvas: 'bg-paper text-ink',
+  surface: 'bg-card text-ink',
+  alt: 'bg-paper-2 text-ink',
+  sunk: 'bg-card text-ink',
+  dark: 'bg-ink text-paper',
 }
 
 export function Section({
@@ -27,10 +34,9 @@ export function Section({
       id={id}
       aria-labelledby={ariaLabelledBy}
       className={[
-        styles.section,
-        styles[tone],
-        size === 'compact' ? styles.compact : '',
-        divider ? styles.divider : '',
+        TONE_CLASSES[tone],
+        size === 'compact' ? 'py-14 md:py-16' : 'py-20 md:py-28',
+        divider ? 'border-t border-line' : '',
         className,
       ]
         .filter(Boolean)

@@ -1,5 +1,3 @@
-import styles from './Spinner.module.css'
-
 type SpinnerProps = {
   /** Rendered next to the spinner and announced to screen readers. */
   label?: string
@@ -9,9 +7,12 @@ type SpinnerProps = {
 
 export function Spinner({ label = 'Loading…', full = false }: SpinnerProps) {
   return (
-    <div className={full ? styles.full : styles.inline} role="status">
-      <span className={styles.dot} aria-hidden="true" />
-      <span className={full ? styles.label : 'visually-hidden'}>{label}</span>
+    <div
+      className={full ? 'grid min-h-[40vh] place-items-center gap-2 text-ink-soft' : 'inline-flex items-center gap-2 text-ink-soft'}
+      role="status"
+    >
+      <span aria-hidden className="h-2.5 w-2.5 animate-pulse rounded-full bg-brand-deep" />
+      <span className={full ? 'text-[0.92rem]' : 'visually-hidden'}>{label}</span>
     </div>
   )
 }

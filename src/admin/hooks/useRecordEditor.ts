@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * The plumbing shared by every "create or edit one record" screen: loading an
  * existing document, saving, deleting, and warning before a tab with unsaved
@@ -8,13 +10,13 @@
  */
 
 import { useCallback, useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import type { RawDocument } from '@/lib/firestore/rest'
+import { useRouter } from 'next/navigation'
+import type { RawDocument } from '@/lib/apiTypes'
 import { useToast } from '../components/Toast'
 import {
   createRecord,
   deleteRecord,
-  describeFirestoreError,
+  describeApiError,
   getRecord,
   updateRecord,
 } from '../lib/crud'
@@ -58,7 +60,7 @@ export function useRecordEditor<T>({
   listPath,
   label,
 }: Options<T>): RecordEditor {
-  const navigate = useNavigate()
+  const router = useRouter()
   const toast = useToast()
 
   const isNew = !id || id === 'new'
@@ -69,8 +71,6 @@ export function useRecordEditor<T>({
   const [deleting, setDeleting] = useState(false)
   const [dirty, setDirty] = useState(false)
 
-  // `onLoaded` is a fresh closure on every render; a ref keeps the effect from
-  // re-fetching the document each time the form re-renders.
   const [loadedFor, setLoadedFor] = useState<string | null>(null)
 
   useEffect(() => {
@@ -93,7 +93,7 @@ export function useRecordEditor<T>({
         setLoadedFor(id)
       } catch (error) {
         if (!cancelled) {
-          toast.error(describeFirestoreError(error))
+          toast.error(describeApiError(error))
           setMissing(true)
         }
       } finally {
@@ -139,7 +139,7 @@ export function useRecordEditor<T>({
         toast.success(`${label} saved.`)
         return id as string
       } catch (error) {
-        toast.error(describeFirestoreError(error))
+        toast.error(describeApiError(error))
         return null
       } finally {
         setSaving(false)
@@ -156,13 +156,13 @@ export function useRecordEditor<T>({
       await deleteRecord(collectionName, id)
       setDirty(false)
       toast.success(`${label} deleted.`)
-      navigate(listPath, { replace: true })
+      router.replace(listPath)
     } catch (error) {
-      toast.error(describeFirestoreError(error))
+      toast.error(describeApiError(error))
     } finally {
       setDeleting(false)
     }
-  }, [collectionName, id, isNew, label, listPath, navigate, toast])
+  }, [collectionName, id, isNew, label, listPath, router, toast])
 
   return { loading, missing, saving, deleting, dirty, setDirty, save, remove }
 }

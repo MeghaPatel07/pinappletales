@@ -1,32 +1,31 @@
+'use client'
+
 /**
- * Route guard for every /admin URL except the login screen.
+ * Guards every /admin page except the login screen.
  *
- * A visitor who is not signed in is sent to /admin/login with the URL they
- * wanted recorded, so signing in lands them where they were headed rather than
- * on the dashboard.
+ * middleware.ts already redirects an unauthenticated request at the edge
+ * before any HTML ships, using the refresh-token cookie. This is the client
+ * side of that same guard — it covers the moment between mount and the
+ * session check resolving, and the case where the cookie was valid but the
+ * account no longer exists.
  */
 
-import { Navigate, Outlet, useLocation } from 'react-router-dom'
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import type { ReactNode } from 'react'
 import { Spinner } from '../components/Spinner'
 import { useAuth } from './AuthProvider'
 
-export function RequireAuth() {
+export function RequireAuth({ children }: { children: ReactNode }) {
   const { session, loading } = useAuth()
-  const location = useLocation()
+  const router = useRouter()
 
-  // Firebase restores a persisted session asynchronously. Redirecting during
-  // that window would bounce a signed-in admin to the login screen on reload.
+  useEffect(() => {
+    if (!loading && !session) router.replace('/admin/login')
+  }, [loading, session, router])
+
   if (loading) return <Spinner full label="Checking your session…" />
+  if (!session) return <Spinner full label="Redirecting to sign in…" />
 
-  if (!session) {
-    return (
-      <Navigate
-        to="/admin/login"
-        replace
-        state={{ from: location.pathname + location.search }}
-      />
-    )
-  }
-
-  return <Outlet />
+  return <>{children}</>
 }
